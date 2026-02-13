@@ -23,9 +23,6 @@ local mainapi = {
 	Windows = {}
 }
 
--- Safe stub so early callbacks can call this before full implementation exists.
-function mainapi:UpdateTextGUI() end
-
 local cloneref = cloneref or function(obj)
 	return obj
 end
@@ -6191,14 +6188,6 @@ local textguiscale = textgui:CreateSlider({
 		mainapi:UpdateTextGUI()
 	end
 })
-local textguihd = textgui:CreateToggle({
-	Name = 'HD',
-	Tooltip = 'Renders larger high-detail text and logo.',
-	Default = true,
-	Function = function()
-		mainapi:UpdateTextGUI()
-	end
-})
 local textguiautosort = textgui:CreateToggle({
 	Name = 'Auto Sort',
 	Tooltip = 'Automatically updates arraylist ordering in real-time.',
@@ -6763,6 +6752,7 @@ targetinfo = {
 mainapi.Libraries.targetinfo = targetinfo
 
 function mainapi:UpdateTextGUI(afterload)
+	afterload = afterload or true
 	if not afterload and not mainapi.Loaded then return end
 	if textgui.Button.Enabled then
 		local right = textgui.Children.AbsolutePosition.X > (gui.AbsoluteSize.X / 2)
