@@ -3,6 +3,7 @@ local cloneref = cloneref or function(obj) return obj end
 
 local playersService = cloneref(game:GetService('Players'))
 local inputService = cloneref(game:GetService('UserInputService'))
+local tweenService = cloneref(game:GetService('TweenService'))
 local replicatedStorage = cloneref(game:GetService('ReplicatedStorage'))
 local collectionService = cloneref(game:GetService('CollectionService'))
 local runService = cloneref(game:GetService('RunService'))
@@ -52,15 +53,19 @@ run(function()
 
 	bd = setmetatable({
 		BedwarsShop = require(replicatedStorage.Constants.BedWarsShop),
-		BedwarsUpgrades = require(replicatedStorage.Constants.BedWarsTeamUpgrades),
+		BedwarsUpgrades = require(replicatedStorage.Constants.BedWarsTeamUpgrades), 
 		Blink = require(replicatedStorage.Blink.Client),
 		BreakTimes = require(replicatedStorage.Constants.Blocks),
 		BowClient = require(replicatedStorage.Client.Components.All.Tools.BowClient),
+		BowConstants = require(replicatedStorage.Constants.Ranged),
+		CombatService = Knit.GetService('CombatService'),
 		CombatConstants = require(replicatedStorage.Constants.Melee),
 		Communication = require(replicatedStorage.Client.Communication),
+		ChatReplacementList = require(replicatedStorage.Client.Controllers.All.ChatController.ChatReplacementList),
 		Knit = Knit,
 		Entity = require(replicatedStorage.Modules.Entity),
 		ServerData = require(replicatedStorage.Modules.ServerData),
+		ToolService = Knit.GetService('ToolService')
 	}, {
 		__index = function(self, ind)
 			rawset(self, ind, ind:find('Service') and Knit.GetService(ind) or Knit.GetController(ind))
@@ -102,6 +107,44 @@ end)
 for _, v in {'Reach', 'SilentAim', 'Disabler', 'HitBoxes', 'MurderMystery', 'AutoRejoin'} do
 	vape:Remove(v)
 end
+
+run(function()
+	local oldstart = entitylib.start
+	local function teamcheck(ent)
+		local suc, res = pcall(function()
+			if ent.Team or ent.Character.Humanoid.Team then
+				return lplr.Team ~= (ent.Team or ent.Character.Humanoid.Team)
+			end
+		end)
+		return (suc and res) or true
+	end
+	local function customEntity(ent)
+		if not ent:HasTag('NPC') then return end
+		if ent:IsDescendantOf(workspace) then
+			if ent.Name:find("%[BOT%]") then
+				ent.Name = ent.Name:gsub('<font.->', ''):gsub('</font>', ''):gsub('%[BOT%]%s*', '')
+			end
+			entitylib.addEntity(ent, nil, ent:HasTag('NPC') and function(self)
+				return teamcheck(self)
+			end)
+		end
+	end
+
+	entitylib.start = function()
+		oldstart()
+		if entitylib.Running then
+			for _, ent in collectionService:GetTagged('NPC') do
+				customEntity(ent)
+			end
+			table.insert(entitylib.Connections, collectionService:GetInstanceAddedSignal('NPC'):Connect(customEntity))
+			table.insert(entitylib.Connections, collectionService:GetInstanceRemovedSignal('NPC'):Connect(function(ent)
+				entitylib.removeEntity(ent)
+			end))
+		end
+	end
+end)
+entitylib.start()
+
 run(function()
 	local AutoClicker
 	local CPS
@@ -129,24 +172,59 @@ run(function()
 		DefaultMax = 12
 	})
 end)
+
+run(function()
+	local NoClickDelay
+	local old
+
+	NoClickDelay = vape.Categories.Combat:CreateModule({
+		Name = 'NoClickDelay',
+		Function = function(callback)
+			if callback then
+				old = hookfunction(bd.Blink.player_state.update_cps.fire, function()
+				end)
+			else
+				hookfunction(bd.Blink.player_state.update_cps.fire, old)
+				old = nil
+			end
+		end,
+		Tooltip = 'Removes the CPS cap'
+	})
+end)
 	
 run(function()
+	local Reach
+	local Value
 	local old
 	
-	vape.Categories.Combat:CreateModule({
+	Reach = vape.Categories.Combat:CreateModule({
 		Name = 'Reach',
 		Function = function(callback)
 			if callback then
 				old = rawget(bd.CombatConstants, 'REACH_IN_STUDS')
-				rawset(bd.CombatConstants, 'REACH_IN_STUDS', 18)
-				rawset(bd.Entity.LocalEntity, 'Reach', 18)
+				rawset(bd.CombatConstants, 'REACH_IN_STUDS', Value.Value)
+				rawset(bd.Entity.LocalEntity, 'Reach', Value.Value)
 			else
 				rawset(bd.CombatConstants, 'REACH_IN_STUDS', old)
 				rawset(bd.Entity.LocalEntity, 'Reach', old)
 				old = nil
 			end
 		end,
-		Tooltip = 'Extends attack reach'
+		Tooltip = 'Extends tool attack reach'
+	})
+	Value = Reach:CreateSlider({
+		Name = 'Range',
+		Min = 0,
+		Max = 18,
+		Default = 18,
+		Decimal = 10,
+		Suffix = function(val) 
+			return val == 1 and 'stud' or 'studs' 
+		end,
+		Function = function(val)
+			rawset(bd.CombatConstants, 'REACH_IN_STUDS', val)
+			rawset(bd.Entity.LocalEntity, 'Reach', val)
+		end
 	})
 end)
 	
@@ -213,11 +291,11 @@ run(function()
 	})
 	VelocityTargeting = Velocity:CreateToggle({Name = 'Only when targeting'})
 end)
-	
+
+local Criticals = {Enabled = false}
 run(function()
 	local old
-	
-	vape.Categories.Blatant:CreateModule({
+	Criticals = vape.Categories.Blatant:CreateModule({
 		Name = 'Criticals',
 		Function = function(callback)
 			if callback then 
@@ -236,7 +314,7 @@ run(function()
 		Tooltip = 'Always hit criticals'
 	})
 end)
-	
+
 run(function()
 	local old
 	
@@ -263,15 +341,14 @@ end)
 run(function()
 	local Killaura
 	local Targets
-	local CPS
-	local SwingRange
 	local AttackRange
+	local SwingRange
 	local AngleSlider
-	local Max
+	local AutoBlock
 	local Mouse
 	local Swing
 	local Block
-	local AutoBlock
+	local Max
 	local BoxSwingColor
 	local BoxAttackColor
 	local ParticleTexture
@@ -280,7 +357,6 @@ run(function()
 	local ParticleSize
 	local LegitAura
 	local Particles, Boxes, AttackDelay, SwingDelay, ClickDelay = {}, {}, tick(), tick(), tick()
-	local lMouse = cloneref(lplr:GetMouse())
 	
 	local function getAttackData()
 		if Mouse.Enabled then
@@ -291,6 +367,12 @@ run(function()
 		end
 	
 		return getTool()
+	end
+
+	local function blockSword(bool: boolean, sword: string)
+		task.spawn(function()
+			return bd.ToolService:ToggleBlockSword(bool, sword)
+		end)
 	end
 	
 	Killaura = vape.Categories.Blatant:CreateModule({
@@ -304,7 +386,7 @@ run(function()
 						end
 					end))
 				end
-	
+					
 				repeat
 					local tool = getAttackData()
 					local attacked = {}
@@ -317,64 +399,68 @@ run(function()
 							NPCs = Targets.NPCs.Enabled,
 							Limit = Max.Value
 						})
-	
-						if #plrs > 0 then
-							local selfpos = entitylib.character.RootPart.Position
-							local localfacing = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1)
-	
-							if AutoBlock.Enabled and not bd.Entity.LocalEntity.IsBlocking then
-								firesignal(lMouse.Button2Down)
-							end
-	
-							for _, v in plrs do
-								local delta = (v.RootPart.Position - selfpos)
-								local angle = math.acos(localfacing:Dot((delta * Vector3.new(1, 0, 1)).Unit))
-								if angle > (math.rad(AngleSlider.Value) / 2) then continue end
-								table.insert(attacked, {
-									Entity = v,
-									Check = delta.Magnitude > AttackRange.Value and BoxSwingColor or BoxAttackColor
-								})
-								targetinfo.Targets[v] = tick() + 1
-								if Block.Enabled then
-									if bd.Entity.LocalEntity.IsBlocking then continue end
+		
+						task.spawn(function()
+							if #plrs > 0 then
+								local selfpos = entitylib.character.RootPart.Position
+								local localfacing = entitylib.character.RootPart.CFrame.LookVector * Vector3.new(1, 0, 1)
+
+								if AutoBlock.Enabled and tool and not bd.Entity.LocalEntity.IsBlocking then
+									blockSword(true, tool.Name)
 								end
-	
-								if not Swing.Enabled and SwingDelay < tick() then
-									SwingDelay = tick() + 0.25
-									entitylib.character.Humanoid.Animator:LoadAnimation(tool.Animations.Swing):Play()
-	
-									if vape.ThreadFix then
-										setthreadidentity(2)
-									end
-									bd.ViewmodelController:PlayAnimation(tool.Name)
-									if vape.ThreadFix then
-										setthreadidentity(8)
-									end
-								end
-	
-								if delta.Magnitude > AttackRange.Value then continue end
-								if AttackDelay < tick() then
-									AttackDelay = tick() + (1 / CPS.GetRandomValue())
-									local bdent = bd.Entity.FindByCharacter(v.Character)
-									if bdent then
-										bd.Blink.item_action.attack_entity.fire({
-											target_entity_id = bdent.Id,
-											is_crit = entitylib.character.RootPart.AssemblyLinearVelocity.Y < 0,
-											weapon_name = tool.Name,
-											extra = {
-												rizz = 'No.',
-												sigma = 'The...',
-												those = workspace.Name == 'Ok'
-											}
+			
+								task.spawn(function()
+									for _, v in plrs do
+										local delta = ((v.RootPart.Position + v.Humanoid.MoveDirection) - selfpos)
+										local angle = math.acos(localfacing:Dot((delta * Vector3.new(1, 0, 1)).Unit))
+										if angle > (math.rad(AngleSlider.Value) / 2) then continue end
+										table.insert(attacked, {
+											Entity = v,
+											Check = delta.Magnitude > AttackRange.Value and BoxSwingColor or BoxAttackColor
 										})
+										targetinfo.Targets[v] = tick() + 1
+										if Block.Enabled then
+											if bd.Entity.LocalEntity.IsBlocking then continue end
+										end
+				
+										if not Swing.Enabled and SwingDelay < tick() then
+											SwingDelay = tick() + 0.25
+											entitylib.character.Humanoid.Animator:LoadAnimation(tool.Animations.Swing):Play()
+			
+											if vape.ThreadFix then
+												setthreadidentity(2)
+											end
+											bd.ViewmodelController:PlayAnimation(tool.Name)
+											if vape.ThreadFix then
+												setthreadidentity(8)
+											end
+										end
+				
+										if delta.Magnitude > AttackRange.Value then continue end
+										if AttackDelay < tick() then
+											AttackDelay = tick() + 0.1
+											local bdent = bd.Entity.FindByCharacter(v.Character)
+											task.spawn(function()
+												if bdent then
+													bd.Blink.item_action.attack_entity.fire({
+														target_entity_id = bdent.Id,
+														is_crit = (Criticals.Enabled and true) or entitylib.character.RootPart.AssemblyLinearVelocity.Y < 0,
+														weapon_name = tool.Name,
+														extra = {
+															rizz = 'Bro.',
+															owo = 'What\'s this? OwO',
+															those = workspace.Name == 'Ok'
+														}
+													})
+												end
+											end)
+										end
 									end
-								end
+								end)
+							elseif AutoBlock.Enabled then
+								blockSword(false, tool.Name)
 							end
-						else
-							if AutoBlock.Enabled and bd.Entity.LocalEntity.IsBlocking then
-								firesignal(lMouse.Button2Up)
-							end
-						end
+						end)
 					end
 	
 					for i, v in Boxes do
@@ -394,7 +480,7 @@ run(function()
 				until not Killaura.Enabled
 			else
 				if AutoBlock.Enabled and bd.Entity.LocalEntity.IsBlocking then
-					firesignal(lMouse.Button2Up)
+					blockSword(false, getAttackData().Name)
 				end
 				for _, v in Boxes do
 					v.Adornee = nil
@@ -404,16 +490,14 @@ run(function()
 				end
 			end
 		end,
-		Tooltip = 'Attack players around you\nwithout aiming at them.'
+		Tooltip = 'Attack players around you\nwithout aiming at them.',
+		ExtraText = function(call)
+			repeat
+				if Max.Value > 1 then return 'Mutliple' else return 'Single' end
+			until not call
+		end
 	})
 	Targets = Killaura:CreateTargets({Players = true})
-	CPS = Killaura:CreateTwoSlider({
-		Name = 'Attacks per Second',
-		Min = 1,
-		Max = 20,
-		DefaultMin = 12,
-		DefaultMax = 12
-	})
 	SwingRange = Killaura:CreateSlider({
 		Name = 'Swing range',
 		Min = 1,
@@ -444,10 +528,13 @@ run(function()
 		Max = 10,
 		Default = 10
 	})
+	AutoBlock = Killaura:CreateToggle({
+		Name = 'AutoBlock',
+		Tooltip = 'Automatically blocks for you'
+	})
 	Mouse = Killaura:CreateToggle({Name = 'Require mouse down'})
 	Swing = Killaura:CreateToggle({Name = 'No Swing'})
 	Block = Killaura:CreateToggle({Name = 'No Block'})
-	AutoBlock = Killaura:CreateToggle({Name = 'AutoBlock'})
 	Killaura:CreateToggle({
 		Name = 'Show target',
 		Function = function(callback)
@@ -589,47 +676,7 @@ run(function()
 		Tooltip = 'Only attacks while swinging manually'
 	})
 end)
-	
-run(function()
-	local old
-	
-	vape.Categories.Blatant:CreateModule({
-		Name = 'NoFall',
-		Function = function(callback)
-			if callback then 
-				old = hookfunction(bd.Blink.player_state.take_fall_damage.fire, function() end)
-			else
-				hookfunction(bd.Blink.player_state.take_fall_damage.fire, old)
-				old = nil
-			end
-		end,
-		Tooltip = 'Prevents taking fall damage.'
-	})
-end)
-	
-run(function()
-	local old
-	
-	vape.Categories.Blatant:CreateModule({
-		Name = 'NoSlowdown',
-		Function = function(callback)
-			local func = debug.getproto(bd.MovementController.KnitStart, 5)
-			if callback then
-				old = debug.getconstants(debug.getproto(bd.MovementController.KnitStart, 5))
-				for i, v in old do 
-					debug.setconstant(func, i, v == 'IsSneaking' and v or 'IsSpectating')
-				end
-			else
-				for i, v in old do 
-					debug.setconstant(func, i, v)
-				end
-				table.clear(old)
-			end
-		end,
-		Tooltip = 'Prevents slowing down when using items.'
-	})
-end)
-	
+
 run(function()
 	local TargetPart
 	local FOV
@@ -682,6 +729,71 @@ run(function()
 		Min = 1,
 		Max = 1000,
 		Default = 1000
+	})
+end)
+	
+run(function()
+	local NoFall
+	local Mode
+	local old
+	local hooked
+	
+	NoFall = vape.Categories.Blatant:CreateModule({
+		Name = 'NoFall',
+		Function = function(callback)
+			if callback then
+				repeat task.wait()
+					if not hooked and Mode.Value == 'Cancel' then
+						hooked = true
+						old = hookfunction(bd.Blink.player_state.take_fall_damage.fire, function() end)
+					elseif hooked and Mode.Value ~= 'Cancel' then
+						hookfunction(bd.Blink.player_state.take_fall_damage.fire, old)
+						old = nil
+						hooked = false
+					end
+					
+					if entitylib.character.Humanoid.FloorMaterial == Enum.Material.Air and entitylib.isAlive and (entitylib.character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall or entitylib.character.Humanoid:GetState() == Enum.HumanoidStateType.FallingDown) then
+						if Mode.Value == 'State' then
+							entitylib.character.Humanoid:ChangeState(Enum.HumanoidStateType.Landed)
+						end
+					end
+				until not NoFall.Enabled
+			else
+				if Mode.Value == 'Cancel' then
+					hookfunction(bd.Blink.player_state.take_fall_damage.fire, old)
+					old = nil
+					hooked = nil
+				end
+			end
+		end,
+		Tooltip = 'Prevents taking fall damage.'
+	})
+	Mode = NoFall:CreateDropdown({
+		Name = 'Mode',
+		List = {'Cancel', 'State'}
+	})
+end)
+	
+run(function()
+	local old
+	
+	vape.Categories.Blatant:CreateModule({
+		Name = 'NoSlowdown',
+		Function = function(callback)
+			local func = debug.getproto(bd.MovementController.KnitStart, 5)
+			if callback then
+				old = debug.getconstants(debug.getproto(bd.MovementController.KnitStart, 5))
+				for i, v in old do 
+					debug.setconstant(func, i, v == 'IsSneaking' and v or 'IsSpectating')
+				end
+			else
+				for i, v in old do 
+					debug.setconstant(func, i, v)
+				end
+				table.clear(old)
+			end
+		end,
+		Tooltip = 'Prevents slowing down when using items.'
 	})
 end)
 	
@@ -798,7 +910,7 @@ run(function()
 		Name = 'Scaffold',
 		Function = function(callback)
 			if callback then
-				repeat
+				Scaffold:Clean(runService.Stepped:Connect(function()
 					if entitylib.isAlive then
 						local btype, bname = getBlock()
 	
@@ -837,8 +949,8 @@ run(function()
 												position = blockpos,
 												block_type = btype,
 												extra = {
-													rizz = 'No.',
-													sigma = 'The...',
+													rizz = 'Bro.',
+													owo = 'What\'s this? OwO',
 													those = workspace.Name == 'Ok'
 												}
 											})
@@ -853,8 +965,8 @@ run(function()
 							end
 						end
 					end
-					task.wait(0.03)
-				until not Scaffold.Enabled
+					task.wait()
+				end))
 			end
 		end,
 		Tooltip = 'Helps you make bridges/scaffold walk.'
@@ -878,12 +990,13 @@ run(function()
 	})
 	LimitItem = Scaffold:CreateToggle({Name = 'Limit to items'})
 end)
-	
+
 run(function()
 	local AutoBuy
 	local Sword
 	local Armor
 	local Upgrades
+	local Pickaxe
 	local NPCs = {}
 	local UpgradeToggles = {}
 	local Functions = {}
@@ -1050,27 +1163,11 @@ run(function()
 		}))
 		count += 1
 	end
-	--[[for i, v in bedwars.TeamUpgradeMeta do
-		local toggleCount = count
-		table.insert(UpgradeToggles, AutoBuy:CreateToggle({
-			Name = 'Buy '..(v.name == 'Armor' and 'Protection' or v.name),
-			Function = function(callback)
-				npctick = tick()
-				Functions[5 + toggleCount + (v.name == 'Armor' and 20 or 0)] = callback and function(currencytable, shop, upgrades)
-					if not upgrades then return end
-					if v.disabledInQueue and table.find(v.disabledInQueue, store.queueType) then return end
-					return buyUpgrade(i, currencytable)
-				end or nil
-			end,
-			Darker = true,
-			Default = (i == 'ARMOR' or i == 'DAMAGE')
-		}))
-		count += 1
-	end]]
 end)
 	
 run(function()
 	local Breaker
+	local Range
 	local Value
 	local OnlyPlayer
 	
@@ -1116,15 +1213,20 @@ run(function()
 							local rvec = Vector3.new(3, 3, 3) * Range.Value
 	
 							for blockpos, block in getBlocksInPoints(pos - rvec, pos + rvec) do
-								if block and block.Name == 'Block' and (block.Parent.Name == 'Bed' and lplr.Team and block.Parent:GetAttribute('Team') ~= lplr.Team.Name) then
+								if (block and block:IsA('Part') and block.Name == 'Block') and (block.Parent.Name == 'Bed' and lplr.Team and block.Parent:GetAttribute('Team') ~= lplr.Team.Name) then
 									breakBlock = block
 									break
 								end
 							end
-	
+
+							if breakBlock then
+								gameCamera.CFrame = CFrame.new(gameCamera.CFrame.Position, breakBlock.Position)
+							end
+
 							if breakBlock ~= lastBreak then
 								if breakBlock then
 									breakTime = os.clock() + bd.BreakTimes[breakBlock:GetAttribute('block_type') or 'Clay']
+
 									bd.Blink.item_action.start_break_block.fire({
 										position = breakBlock.Position,
 										pickaxe_name = pickaxe,
@@ -1140,6 +1242,7 @@ run(function()
 							end
 						end
 					end
+
 					task.wait(1 / 60)
 				until not Breaker.Enabled
 			end
@@ -1156,4 +1259,122 @@ run(function()
 		end
 	})
 end)
-	
+
+run(function()
+	local ChatBypass
+	local restore = {}
+
+	ChatBypass = vape.Categories.Utility:CreateModule({
+		Name = 'ChatBypass',
+		Function = function(callback)
+			if callback then
+				for i,v in bd.ChatReplacementList do
+					restore[i] = v.toBeReplaced
+					v.toBeReplaced = {}
+				end
+			else
+				for i,v in bd.ChatReplacementList do
+					v.toBeReplaced = restore[i]
+					restore[i] = nil
+				end
+			end
+		end,
+		Tooltip = 'Allows you to say \'ez\' and \'67\' in chat'
+	})
+end)
+
+run(function()
+	local AutoWin
+	local Tween
+	local Mode
+	local dist, bed = 1/0, nil
+
+	local function getTeam()
+		return (lplr.Team and lplr.Team.Name == 'Red' and 'Blue' or 'Red') or 'Unknown'
+	end
+
+	AutoWin = vape.Categories.Blatant:CreateModule({
+		Name = 'AutoFarm',
+		Function = function(callback)
+			if callback then
+				repeat
+					if not entitylib.isAlive then continue end
+
+					if Mode.Value == 'Bridge' then
+						local team = getTeam()
+
+						if team ~= 'Unknown' then
+							local root, goal = entitylib.character.RootPart, workspace.Map:FindFirstChild(team..'Base').Goal
+							local dist = (goal.Position - root.Position).Magnitude / 20
+
+							root.AssemblyLinearVelocity = Vector3.zero
+							root.AssemblyAngularVelocity = Vector3.zero
+
+							if Tween == nil then
+								Tween = tweenService:Create(root, TweenInfo.new(dist, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {Position = goal.Position})
+								Tween:Play()
+								Tween.Completed:Wait()
+
+								task.wait(7)
+								Tween = nil
+							end
+						end
+					else
+						local root = entitylib.character.RootPart
+						for _, v in workspace.Map:GetChildren() do
+							if v.Name == 'Bed' and v:GetAttribute('Team') ~= lplr.Team.Name then
+							    if not v.PrimaryPart then continue end
+
+								local pos = (v.PrimaryPart and v.PrimaryPart.Position - root.Position).Magnitude
+								if (v.PrimaryPart.Position - root.Position).Magnitude < dist then
+									dist = pos
+									bed = v.PrimaryPart
+								end
+							end
+						end
+
+						if dist and bed then
+							if Tween == nil then
+								Tween = tweenService:Create(root, TweenInfo.new(dist / 20, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {Position = bed.Position})
+								Tween:Play()
+								Tween.Completed:Wait()
+
+								local plrs = entitylib.AllPosition({
+									Range = 16,
+									Wallcheck = false,
+									Part = 'RootPart',
+									Players = true,
+									NPCs = true,
+									Limit = 1
+								})
+
+								if #plrs > 0 then
+									for _, v in plrs do
+										tweenService:Create(root, TweenInfo.new(dist / 20, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0), {Position = v.Entity.RootPart.Position}):Play()
+									end
+								end
+
+								task.wait(7)
+								Tween = nil
+							end
+						end
+					end
+
+					task.wait()
+				until not AutoWin.Enabled
+			else
+				if Tween then
+				Tween = nil
+				end
+			end
+		end,
+		Tooltip = 'Automatically wins matches for you',
+		ExtraText = function()
+			return Mode.Value
+		end
+	})
+	Mode = AutoWin:CreateDropdown({
+		Name = 'Mode',
+		List = {'Bridge', 'Bedwars'}
+	})
+end)
