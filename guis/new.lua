@@ -331,7 +331,10 @@ local function downloadFile(path, func)
 			)
 		end)
 		if not suc or res == '404: Not Found' then
-			error(res)
+			if isfile(path) then
+				return (func or readfile)(path)
+			end
+			return func and '' or ''
 		end
 		if path:find('.lua') then
 			res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res
@@ -5925,7 +5928,9 @@ general:CreateButton({
 		if shared.VapeDeveloper then
 			loadstring(readfile('vape67/loader.lua'), 'loader')()
 		else
-			loadstring(game:HttpGet('https://raw.githubusercontent.com/0x6767/VapeV67/'..readfile('vape67/profiles/commit.txt')..'/loader.lua', true))()
+			local commit = (isfile('vape67/profiles/commit.txt') and readfile('vape67/profiles/commit.txt') or '')
+			commit = commit ~= '' and commit or 'main'
+			loadstring(game:HttpGet('https://raw.githubusercontent.com/0x6767/VapeV67/'..commit..'/loader.lua', true))()
 		end
 	end,
 	Tooltip = 'This will set your profile to the default settings of Vape'
@@ -5944,7 +5949,9 @@ general:CreateButton({
 		if shared.VapeDeveloper then
 			loadstring(readfile('vape67/loader.lua'), 'loader')()
 		else
-			loadstring(game:HttpGet('https://raw.githubusercontent.com/0x6767/VapeV67/'..readfile('vape67/profiles/commit.txt')..'/loader.lua', true))()
+			local commit = (isfile('vape67/profiles/commit.txt') and readfile('vape67/profiles/commit.txt') or '')
+			commit = commit ~= '' and commit or 'main'
+			loadstring(game:HttpGet('https://raw.githubusercontent.com/0x6767/VapeV67/'..commit..'/loader.lua', true))()
 		end
 	end,
 	Tooltip = 'Reloads vape for debugging purposes'
