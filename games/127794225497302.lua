@@ -54,9 +54,11 @@ run(function ()
 			if callback then
 				repeat
 					fish = getFish(Range)
-					if fish then
-						replicatedStorage.common.packages.Knit.Services.HarpoonService.RF.StartCatching:InvokeServer(fish.Name)
-					end
+                    if fish then
+                        replicatedStorage.common.packages.Knit.Services.HarpoonService.RF.StartCatching:InvokeServer(
+                        fish.Name)
+                    end
+					task.wait()
 				until not Catch.Enabled
 			end
 		end
@@ -81,9 +83,11 @@ run(function ()
 		Function = function(callback)
 			if callback then
 				repeat
-					if catchui.Parent then
-						catchui.Green.Position = UDim2.new(0, catchui.Marker.Fish.Position.X.Scale, 0, catchui.Marker.Fish.Position.Y.Scale)
-					end
+                    if catchui.Parent then
+                        catchui.Green.Position = UDim2.new(0, catchui.Marker.Fish.Position.X.Scale, 0,
+                            catchui.Marker.Fish.Position.Y.Scale)
+                    end
+					task.wait()
 				until not Minigame.Enabled
 			end
 		end
