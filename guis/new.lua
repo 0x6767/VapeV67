@@ -6147,6 +6147,13 @@ local textguisort = textgui:CreateDropdown({
 		mainapi:UpdateTextGUI()
 	end
 })
+local textguistyle = textgui:CreateDropdown({
+	Name = 'Arraylist Style',
+	List = {'Vape', 'Simple'},
+	Function = function()
+		mainapi:UpdateTextGUI()
+	end
+})
 local textguifont = textgui:CreateFont({
 	Name = 'Font',
 	Blacklist = 'Arial',
@@ -6456,9 +6463,19 @@ local function formatTextGUIText(text)
 	return textguilowercase.Enabled and text:lower() or text
 end
 
+local function getModuleDisplayText(name, module)
+	local extra = module and module.ExtraText and module.ExtraText()
+	local text = formatTextGUIText(name)
+	if not extra or extra == '' then
+		return text
+	end
+	local extracolor = textguistyle.Value == 'Simple' and '#BEBEBE' or '#A8A8A8'
+	return text.." <font color='"..extracolor.."'>"..formatTextGUIText(extra)..'</font>'
+end
+
 local function updateTextLabel(label, right)
 	local module = label.Module
-	local text = formatTextGUIText(label.Object.Name..(module and module.ExtraText and " <font color='#A8A8A8'>"..module.ExtraText()..'</font>' or ''))
+	local text = getModuleDisplayText(label.Object.Name, module)
 	local textsize = textguihd.Enabled and 18 or 15
 	label.Text.Text = text
 	label.Text.TextSize = textsize
@@ -6821,7 +6838,7 @@ function mainapi:UpdateTextGUI(afterload)
 				holdertext.Position = UDim2.fromOffset(right and 3 or 6, 2)
 				holdertext.BackgroundTransparency = 1
 				holdertext.BorderSizePixel = 0
-				holdertext.Text = formatTextGUIText(i..(v.ExtraText and " <font color='#A8A8A8'>"..v.ExtraText()..'</font>' or ''))
+				holdertext.Text = getModuleDisplayText(i, v)
 				holdertext.TextSize = hdmode and 18 or 15
 				holdertext.FontFace = textguifont.Value
 				holdertext.RichText = true
