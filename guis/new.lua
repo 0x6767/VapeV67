@@ -23,6 +23,8 @@ local mainapi = {
 	Windows = {}
 }
 
+function mainapi:UpdateTextGUI() end
+
 local cloneref = cloneref or function(obj)
 	return obj
 end
@@ -6752,7 +6754,6 @@ targetinfo = {
 mainapi.Libraries.targetinfo = targetinfo
 
 function mainapi:UpdateTextGUI(afterload)
-	afterload = afterload or true
 	if not afterload and not mainapi.Loaded then return end
 	if textgui.Button.Enabled then
 		local right = textgui.Children.AbsolutePosition.X > (gui.AbsoluteSize.X / 2)
