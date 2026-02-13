@@ -33,11 +33,9 @@ local function getFish(Range)
     local Target = nil
 	
     for i, v in next, workspace.Game.Fish.client:GetChildren() do
-        if not v.dead.Enabled then
-            local Magnitude = (v.RootPart.Position - lplr.Character.HumanoidRootPart.Position).Magnitude
-            if Range < Magnitude then
-                Target = v
-            end
+        local Magnitude = (v.RootPart.Position - lplr.Character.HumanoidRootPart.Position).Magnitude
+        if Range < Magnitude then
+            Target = v
         end
     end
 	return Target
