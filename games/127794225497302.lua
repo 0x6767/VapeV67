@@ -31,10 +31,11 @@ local targetinfo = vape.Libraries.targetinfo
 
 local function getFish(Range)
     local Target = nil
+    local RRange = Range
 	
     for i, v in next, workspace.Game.Fish.client:GetChildren() do
         local Magnitude = (v.RootPart.Position - lplr.Character.HumanoidRootPart.Position).Magnitude
-        if Range < Magnitude then
+        if Magnitude < RRange then
             Target = v
         end
     end
