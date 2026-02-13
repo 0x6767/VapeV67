@@ -9,8 +9,9 @@ if identifyexecutor then
 end
 
 local vape
+local rawLoadstring = loadstring
 local loadstring = function(...)
-	local res, err = loadstring(...)
+	local res, err = rawLoadstring(...)
 	if err and vape then
 		vape:CreateNotification('Vape', 'Failed to load : '..err, 30, 'alert')
 	end
@@ -27,11 +28,31 @@ local cloneref = cloneref or function(obj)
 	return obj
 end
 local playersService = cloneref(game:GetService('Players'))
+local commitPath = 'vape67/profiles/commit.txt'
+
+local function getCommit()
+	if isfile(commitPath) then
+		local commit = readfile(commitPath)
+		if commit ~= '' then
+			return commit
+		end
+	end
+	return 'main'
+end
 
 local function downloadFile(path, func)
+	local localPath = select(1, path:gsub('^vape67/', ''))
+	if shared.VapeDeveloper and isfile(localPath) then
+		return (func or readfile)(localPath)
+	end
+
 	if not isfile(path) then
+		local commit = getCommit()
 		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/0x6767/VapeV67/'..readfile('vape67/profiles/commit.txt')..'/'..select(1, path:gsub('vape67/', '')), true)
+			return game:HttpGet(
+				'https://raw.githubusercontent.com/0x6767/VapeV67/'..commit..'/'..localPath,
+				true
+			)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
