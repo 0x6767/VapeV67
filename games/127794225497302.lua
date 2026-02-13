@@ -63,7 +63,7 @@ run(function ()
 	})
 
 	Range = Catch:CreateSlider({
-		Name = '',
+		Name = 'Range',
 		Min = 0,
 		Max = 30,
 		Default = 20,
