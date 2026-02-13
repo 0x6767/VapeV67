@@ -6127,10 +6127,6 @@ mainapi.GUIColor = mainapi.Categories.Main:CreateGUISlider({
 })
 mainapi.Categories.Main:CreateBind()
 
--- CreateToggle can invoke callbacks immediately for default-enabled options.
--- UpdateTextGUI is fully defined later, so provide a placeholder first.
-function mainapi:UpdateTextGUI() end
-
 --[[
 	Text GUI
 ]]
