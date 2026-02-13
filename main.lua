@@ -1,27 +1,22 @@
 repeat task.wait() until game:IsLoaded()
 if shared.vape then shared.vape:Uninject() end
-if shared.badexecs then return end
 
 -- why do exploits fail to implement anything correctly? Is it really that hard?
 if identifyexecutor then
-	-- With the state of executors, it's not worth the risk of crashing across multiple exploits.
-	if not table.find({'AWP', 'Volt', 'Zenith', 'Nihon', 'Seliware', 'Nucleus'}, ({identifyexecutor()})[1]) then
-		getgenv().setthreadidentity = function(val)
-			return val
-		end
+	if table.find({'Argon', 'Wave'}, ({identifyexecutor()})[1]) then
+		getgenv().setthreadidentity = nil
 	end
 end
 
 local vape
-local rawLoadstring = loadstring
 local loadstring = function(...)
-	local res, err = rawLoadstring(...)
+	local res, err = loadstring(...)
 	if err and vape then
 		vape:CreateNotification('Vape', 'Failed to load : '..err, 30, 'alert')
 	end
 	return res
 end
-local queue_on_teleport = queue_on_teleport or queueonteleport or function() end
+local queue_on_teleport = queue_on_teleport or function() end
 local isfile = isfile or function(file)
 	local suc, res = pcall(function()
 		return readfile(file)
@@ -32,31 +27,11 @@ local cloneref = cloneref or function(obj)
 	return obj
 end
 local playersService = cloneref(game:GetService('Players'))
-local commitPath = 'vape67/profiles/commit.txt'
-
-local function getCommit()
-	if isfile(commitPath) then
-		local commit = readfile(commitPath)
-		if commit ~= '' then
-			return commit
-		end
-	end
-	return 'main'
-end
 
 local function downloadFile(path, func)
-	local localPath = select(1, path:gsub('^vape67/', ''))
-	if isfile(localPath) then
-		return (func or readfile)(localPath)
-	end
-
 	if not isfile(path) then
-		local commit = getCommit()
 		local suc, res = pcall(function()
-			return game:HttpGet(
-				'https://raw.githubusercontent.com/0x6767/VapeV67/'..commit..'/'..localPath,
-				true
-			)
+			return game:HttpGet('https://raw.githubusercontent.com/0x6767/Vape67/'..readfile('vape67/profiles/commit.txt')..'/'..select(1, path:gsub('vape67/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
@@ -88,7 +63,7 @@ local function finishLoading()
 				if shared.VapeDeveloper then
 					loadstring(readfile('vape67/loader.lua'), 'loader')()
 				else
-					loadstring(game:HttpGet('https://raw.githubusercontent.com/0x6767/VapeV67/'..getCommit()..'/loader.lua', true), 'loader')()
+					loadstring(game:HttpGet('https://raw.githubusercontent.com/0x6767/Vape67/'..readfile('vape67/profiles/commit.txt')..'/loader.lua', true), 'loader')()
 				end
 			]]
 			if shared.VapeDeveloper then
@@ -122,35 +97,17 @@ vape = loadstring(downloadFile('vape67/guis/'..gui..'.lua'), 'gui')()
 shared.vape = vape
 
 if not shared.VapeIndependent then
-	loadstring(
-		downloadFile('vape67/games/universal.lua'),
-		'universal'
-	)()
-
-	local placeId = tostring(game.PlaceId)
-	local placeScriptPath = 'vape67/games/'..placeId..'.lua'
-	local localPlaceScriptPath = 'games/'..placeId..'.lua'
-	if isfile(localPlaceScriptPath) then
-		placeScriptPath = localPlaceScriptPath
-	end
-
-	if isfile(placeScriptPath) then
-		loadstring(
-			readfile(placeScriptPath),
-			placeId
-		)(...)
-	elseif not shared.VapeDeveloper then
-		local suc, res = pcall(function()
-			return game:HttpGet(
-				'https://raw.githubusercontent.com/0x6767/VapeV67/'..getCommit()..'/games/'..placeId..'.lua',
-				true
-			)
-		end)
-		if suc and res ~= '404: Not Found' then
-			loadstring(
-				downloadFile('vape67/games/'..placeId..'.lua'),
-				placeId
-			)(...)
+	loadstring(downloadFile('vape67/games/universal.lua'), 'universal')()
+	if isfile('vape67/games/'..game.PlaceId..'.lua') then
+		loadstring(readfile('vape67/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...)
+	else
+		if not shared.VapeDeveloper then
+			local suc, res = pcall(function()
+				return game:HttpGet('https://raw.githubusercontent.com/0x6767/Vape67/'..readfile('vape67/profiles/commit.txt')..'/games/'..game.PlaceId..'.lua', true)
+			end)
+			if suc and res ~= '404: Not Found' then
+				loadstring(downloadFile('vape67/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...)
+			end
 		end
 	end
 	finishLoading()

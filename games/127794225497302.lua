@@ -70,3 +70,22 @@ run(function ()
 		Suffix = 'm'
 	})
 end)
+
+run(function ()
+    local Minigame
+	local Color
+	local catchui = lplr.PlayerGui.Main.CatchingBar.Frame.Bar.Catch
+
+	vape.Categories.Combat:CreateModule({
+		Name = 'Auto Catch',
+		Function = function(callback)
+			if callback then
+				repeat
+					if catchui.Parent then
+						catchui.Green.Position = 
+					end
+				until not Minigame.Enabled
+			end
+		end
+	})
+end)
