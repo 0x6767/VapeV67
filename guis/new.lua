@@ -313,10 +313,22 @@ local function createMobileButton(buttonapi, position)
 end
 
 local function downloadFile(path, func)
+	local localPath = select(1, path:gsub('^vape67/', ''))
+	local commitPath = 'vape67/profiles/commit.txt'
+	local commit = (isfile(commitPath) and readfile(commitPath) or '')
+	commit = commit ~= '' and commit or 'main'
+
+	if isfile(localPath) then
+		return (func or readfile)(localPath)
+	end
+
 	if not isfile(path) then
 		createDownloader(path)
 		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/0x6767/VapeV67/'..readfile('vape67/profiles/commit.txt')..'/'..select(1, path:gsub('vape67/', '')), true)
+			return game:HttpGet(
+				'https://raw.githubusercontent.com/0x6767/VapeV67/'..commit..'/'..localPath,
+				true
+			)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
