@@ -23,6 +23,9 @@ local mainapi = {
 	Windows = {}
 }
 
+-- Safe stub so early callbacks can call this before full implementation exists.
+function mainapi:UpdateTextGUI() end
+
 local cloneref = cloneref or function(obj)
 	return obj
 end
@@ -6123,10 +6126,6 @@ mainapi.GUIColor = mainapi.Categories.Main:CreateGUISlider({
 	end
 })
 mainapi.Categories.Main:CreateBind()
-
--- CreateToggle can invoke callbacks immediately for default-enabled options.
--- UpdateTextGUI is fully defined later, so provide a placeholder first.
-function mainapi:UpdateTextGUI() end
 
 --[[
 	Text GUI
