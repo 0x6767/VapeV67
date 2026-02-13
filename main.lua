@@ -97,7 +97,7 @@ vape = loadstring(downloadFile('vape67/guis/'..gui..'.lua'), 'gui')()
 shared.vape = vape
 
 if not shared.VapeIndependent then
-	loadstring(downloadFile('vape67/games/universal.lua'), 'universal')()
+	--loadstring(downloadFile('vape67/games/universal.lua'), 'universal')()
 	local placeScriptPath = 'vape67/games/'..game.PlaceId..'.lua'
 	if shared.VapeDeveloper and isfile('games/'..game.PlaceId..'.lua') then
 		placeScriptPath = 'games/'..game.PlaceId..'.lua'
