@@ -1,10 +1,14 @@
 repeat task.wait() until game:IsLoaded()
 if shared.vape then shared.vape:Uninject() end
+if shared.badexecs then return end
 
 -- why do exploits fail to implement anything correctly? Is it really that hard?
 if identifyexecutor then
-	if table.find({'Argon', 'Wave'}, ({identifyexecutor()})[1]) then
-		getgenv().setthreadidentity = nil
+	-- With the state of executors, it's not worth the risk of crashing across multiple exploits.
+	if not table.find({'AWP', 'Volt', 'Zenith', 'Nihon', 'Seliware', 'Nucleus'}, ({identifyexecutor()})[1]) then
+		getgenv().setthreadidentity = function(val)
+			return val
+		end
 	end
 end
 
@@ -16,7 +20,7 @@ local loadstring = function(...)
 	end
 	return res
 end
-local queue_on_teleport = queue_on_teleport or function() end
+local queue_on_teleport = queue_on_teleport or queueonteleport or function() end
 local isfile = isfile or function(file)
 	local suc, res = pcall(function()
 		return readfile(file)
@@ -31,7 +35,7 @@ local playersService = cloneref(game:GetService('Players'))
 local function downloadFile(path, func)
 	if not isfile(path) then
 		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/0x6767/VapeV67/'..readfile('vape67/profiles/commit.txt')..'/'..select(1, path:gsub('vape67/', '')), true)
+			return game:HttpGet('https://raw.githubusercontent.com/0x6767/Vape67/'..readfile('vape67/profiles/commit.txt')..'/'..select(1, path:gsub('vape67/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
 			error(res)
@@ -63,7 +67,7 @@ local function finishLoading()
 				if shared.VapeDeveloper then
 					loadstring(readfile('vape67/loader.lua'), 'loader')()
 				else
-					loadstring(game:HttpGet('https://raw.githubusercontent.com/0x6767/VapeV67/'..readfile('vape67/profiles/commit.txt')..'/loader.lua', true), 'loader')()
+					loadstring(game:HttpGet('https://raw.githubusercontent.com/0x6767/Vape67/'..readfile('vape67/profiles/commit.txt')..'/loader.lua', true), 'loader')()
 				end
 			]]
 			if shared.VapeDeveloper then
@@ -96,25 +100,23 @@ end
 vape = loadstring(downloadFile('vape67/guis/'..gui..'.lua'), 'gui')()
 shared.vape = vape
 
+local urlpath
 if not shared.VapeIndependent then
-	--loadstring(downloadFile('vape67/games/universal.lua'), 'universal')()
-	local placeScriptPath = 'vape67/games/'..game.PlaceId..'.lua'
-	if shared.VapeDeveloper and isfile('games/'..game.PlaceId..'.lua') then
-		placeScriptPath = 'games/'..game.PlaceId..'.lua'
-	end
-
-	if isfile(placeScriptPath) then
-		loadstring(readfile(placeScriptPath), tostring(game.PlaceId))(...)
-	else
-		if not shared.VapeDeveloper then
-			local suc, res = pcall(function()
-				return game:HttpGet('https://raw.githubusercontent.com/0x6767/VapeV67/'..readfile('vape67/profiles/commit.txt')..'/games/'..game.PlaceId..'.lua', true)
-			end)
-			if suc and res ~= '404: Not Found' then
-				loadstring(downloadFile('vape67/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...)
+	loadstring(downloadFile('vape67/games/universal.lua'), 'universal')()
+	task.spawn(function(...)
+		if isfile('vape67/games/'..game.PlaceId..'.lua') then
+			loadstring(readfile('vape67/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...)
+		else
+			if not shared.VapeDeveloper then
+				local suc, res = pcall(function()
+					return game:HttpGet('https://raw.githubusercontent.com/0x6767/Vape67/'..readfile('vape67/profiles/commit.txt')..'/games/'..game.PlaceId..'.lua', true)
+				end)
+				if suc and res ~= '404: Not Found' then
+					loadstring(downloadFile('vape67/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...)
+				end
 			end
 		end
-	end
+	end)
 	finishLoading()
 else
 	vape.Init = finishLoading
