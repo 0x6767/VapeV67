@@ -97,21 +97,37 @@ vape = loadstring(downloadFile('vape67/guis/'..gui..'.lua'), 'gui')()
 shared.vape = vape
 
 if not shared.VapeIndependent then
-	loadstring(downloadFile('vape67/games/universal.lua'), 'universal')()
-	local placeScriptPath = 'vape67/games/'..game.PlaceId..'.lua'
-	if shared.VapeDeveloper and isfile('games/'..game.PlaceId..'.lua') then
-		placeScriptPath = 'games/'..game.PlaceId..'.lua'
+	loadstring(
+		downloadFile('vape67/games/universal.lua'),
+		'universal'
+	)()
+
+	local placeId = tostring(game.PlaceId)
+	local cachedPlaceScriptPath = 'vape67/games/'..placeId..'.lua'
+	local localPlaceScriptPath = 'games/'..placeId..'.lua'
+	local placeScriptPath = cachedPlaceScriptPath
+	if shared.VapeDeveloper and isfile(localPlaceScriptPath) then
+		placeScriptPath = localPlaceScriptPath
 	end
 
 	if isfile(placeScriptPath) then
-		loadstring(readfile(placeScriptPath), tostring(game.PlaceId))(...)
+		loadstring(
+			readfile(placeScriptPath),
+			placeId
+		)(...)
 	else
 		if not shared.VapeDeveloper then
 			local suc, res = pcall(function()
-				return game:HttpGet('https://raw.githubusercontent.com/0x6767/VapeV67/'..readfile('vape67/profiles/commit.txt')..'/games/'..game.PlaceId..'.lua', true)
+				return game:HttpGet(
+					'https://raw.githubusercontent.com/0x6767/VapeV67/'..readfile('vape67/profiles/commit.txt')..'/games/'..placeId..'.lua',
+					true
+				)
 			end)
 			if suc and res ~= '404: Not Found' then
-				loadstring(downloadFile('vape67/games/'..game.PlaceId..'.lua'), tostring(game.PlaceId))(...)
+				loadstring(
+					downloadFile(cachedPlaceScriptPath),
+					placeId
+				)(...)
 			end
 		end
 	end
