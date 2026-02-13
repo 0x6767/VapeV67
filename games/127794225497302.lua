@@ -76,13 +76,13 @@ run(function ()
 	local Color
 	local catchui = lplr.PlayerGui.Main.CatchingBar.Frame.Bar.Catch
 
-	vape.Categories.Combat:CreateModule({
-		Name = 'Auto Catch',
+	Minigame = vape.Categories.Combat:CreateModule({
+		Name = 'Auto Minigame',
 		Function = function(callback)
 			if callback then
 				repeat
 					if catchui.Parent then
-						catchui.Green.Position = 
+						catchui.Green.Position = UDim2.new(0, catchui.Marker.Fish.Position.X.Scale, 0, catchui.Marker.Fish.Position.Y.Scale)
 					end
 				until not Minigame.Enabled
 			end
