@@ -42,7 +42,7 @@ end
 
 local function downloadFile(path, func)
 	local localPath = select(1, path:gsub('^vape67/', ''))
-	if shared.VapeDeveloper and isfile(localPath) then
+	if isfile(localPath) then
 		return (func or readfile)(localPath)
 	end
 
