@@ -1,3 +1,4 @@
+--!no-universal
 local run = function(func)
 	func()
 end

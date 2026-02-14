@@ -122,20 +122,19 @@ shared.vape = vape
 
 if not shared.VapeIndependent then
 	local placeId = tostring(game.PlaceId)
-	local noUniversal = {
-		['127794225497302'] = true
-	}
-	if not (shared.VapeNoUniversal or noUniversal[placeId]) then
-		loadstring(
-			downloadFile('vape67/games/universal.lua'),
-			'universal'
-		)()
-	end
-
 	local placeScriptPath = 'vape67/games/'..placeId..'.lua'
 	local localPlaceScriptPath = 'games/'..placeId..'.lua'
 	if isfile(localPlaceScriptPath) then
 		placeScriptPath = localPlaceScriptPath
+	end
+	local placeScriptContent = isfile(placeScriptPath) and readfile(placeScriptPath) or ''
+	local disableUniversalForPlace = placeScriptContent:find('--!no%-universal', 1) ~= nil
+
+	if not (shared.VapeNoUniversal or disableUniversalForPlace) then
+		loadstring(
+			downloadFile('vape67/games/universal.lua'),
+			'universal'
+		)()
 	end
 
 	if isfile(placeScriptPath) then
