@@ -29,24 +29,6 @@ local vape = shared.vape
 local entitylib = vape.Libraries.entity
 local targetinfo = vape.Libraries.targetinfo
 
-local hmm = {}
-for k, v in vape.Modules do
-	for _, categories in next, {'Combat', 'Blatant', 'Render', 'Utility', 'World', 'Minigames'} do
-		if v.Category == categories then
-			table.insert(hmm, k)
-		end
-	end
-end
-for _, china in next, hmm do
-	vape:Remove(china)
-end
-
-local farm = vape:CreateCategory({
-	Name = 'Farm',
-    Icon = 'rbxassetid://119951075637174',
-	Size = UDim2.fromOffset(13, 14)
-})
-
 run(function ()
     local Catch
     local Range
@@ -64,7 +46,7 @@ run(function ()
 		return Target
 	end
 	
-	Catch = farm:CreateModule({
+	Catch = vape.Categories.Combat:CreateModule({
 		Name = 'Auto Catch',
 		Function = function(callback)
 			if callback then
@@ -95,7 +77,7 @@ run(function ()
 	local Size
 	local catchui = lplr.PlayerGui.Main.CatchingBar.Frame.Bar.Catch
 
-	Minigame = farm:CreateModule({
+	Minigame = vape.Categories.Combat:CreateModule({
 		Name = 'Auto Minigame',
 		Function = function(callback)
 			if callback then
