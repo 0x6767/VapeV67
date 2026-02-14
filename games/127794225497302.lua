@@ -29,6 +29,10 @@ local vape = shared.vape
 local entitylib = vape.Libraries.entity
 local targetinfo = vape.Libraries.targetinfo
 
+for i,v in next, {'AimAssist', 'SilentAim', 'TriggerBot', 'Reach'} do
+	vape:Remove(v)
+end
+
 run(function ()
     local Catch
     local Range
