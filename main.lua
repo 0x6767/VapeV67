@@ -115,6 +115,17 @@ local function finishLoading()
 	end
 end
 
+local function runChunk(func, name, ...)
+	if type(func) ~= 'function' then
+		return false
+	end
+	local suc, res = pcall(func, ...)
+	if not suc and vape then
+		vape:CreateNotification('Vape', 'Failed to load '..name..' : '..tostring(res), 30, 'alert')
+	end
+	return suc
+end
+
 if not isfile('vape67/profiles/gui.txt') then
 	writefile('vape67/profiles/gui.txt', 'new')
 end
@@ -123,10 +134,17 @@ local gui = readfile('vape67/profiles/gui.txt')
 if not isfolder('vape67/assets/'..gui) then
 	makefolder('vape67/assets/'..gui)
 end
-local guifunc = loadstring(downloadFile('vape67/guis/'..gui..'.lua'), 'gui')
-if type(guifunc) ~= 'function' then return end
-vape = guifunc()
-if type(vape) ~= 'table' then return end
+local guifunc, guierr = loadstring(downloadFile('vape67/guis/'..gui..'.lua'), 'gui')
+if type(guifunc) ~= 'function' then
+	warn('[Vape] Failed to compile gui: '..tostring(guierr))
+	return
+end
+local guisuc, guires = pcall(guifunc)
+if not guisuc or type(guires) ~= 'table' then
+	warn('[Vape] Failed to execute gui: '..tostring(guires))
+	return
+end
+vape = guires
 shared.vape = vape
 
 if not shared.VapeIndependent then
@@ -142,9 +160,7 @@ if not shared.VapeIndependent then
 			readfile(placeScriptPath),
 			placeId
 		)
-		if type(placefunc) == 'function' then
-			placefunc(...)
-		end
+		runChunk(placefunc, placeId, ...)
 	elseif not shared.VapeDeveloper then
 		local suc, res = pcall(function()
 			return game:HttpGet(
@@ -157,9 +173,7 @@ if not shared.VapeIndependent then
 				downloadFile('vape67/games/'..placeId..'.lua'),
 				placeId
 			)
-			if type(placefunc) == 'function' then
-				placefunc(...)
-			end
+			runChunk(placefunc, placeId, ...)
 		end
 	end
 	finishLoading()
