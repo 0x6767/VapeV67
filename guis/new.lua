@@ -1,5 +1,6 @@
 local mainapi = {
 	Categories = {},
+	Dragging = 0,
 	GUIColor = {
 		Hue = 0.46,
 		Sat = 0.96,
@@ -379,6 +380,7 @@ local function makeDraggable(gui, window)
 			(inputObj.UserInputType == Enum.UserInputType.MouseButton1 or inputObj.UserInputType == Enum.UserInputType.Touch)
 			and (inputObj.Position.Y - gui.AbsolutePosition.Y < 40 or window)
 		then
+			mainapi.Dragging += 1
 			local dragPosition = Vector2.new(
 				gui.AbsolutePosition.X - inputObj.Position.X,
 				gui.AbsolutePosition.Y - inputObj.Position.Y + guiService:GetGuiInset().Y
@@ -398,6 +400,7 @@ local function makeDraggable(gui, window)
 			local ended
 			ended = inputObj.Changed:Connect(function()
 				if inputObj.UserInputState == Enum.UserInputState.End then
+					mainapi.Dragging = math.max(mainapi.Dragging - 1, 0)
 					if changed then
 						changed:Disconnect()
 					end
@@ -6076,7 +6079,9 @@ asort = guipane:CreateToggle({
 		if callback then
 			task.spawn(function()
 				repeat
-					sortgui()
+					if mainapi.Dragging <= 0 then
+						sortgui()
+					end
 					task.wait()
 				until not asort.Enabled
 			end)
