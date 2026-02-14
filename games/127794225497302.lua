@@ -91,13 +91,13 @@ run(function ()
 							end
 						end
 						greenp = catchui.Green.AbsolutePosition + catchui.Green.AbsoluteSize / 2
-                        fishp = catchui.Marker.Fish.AbsolutePosition + catchui.Marker.Fish.AbsoluteSize / 2
-						
+						fishp = catchui.Marker.Fish.AbsolutePosition + catchui.Marker.Fish.AbsoluteSize / 2
+
 						local diff = fishp - greenp
-                        local len = math.sqrt(diff.X * diff.X + diff.Y * diff.Y)
-						
+						local len = math.sqrt(diff.X * diff.X + diff.Y * diff.Y)
+
 						if len > 0 then
-							catchui.Green.Position = catchui.Green.Position + UDim2.new(0, diff.X / len * 5, 0, diff.Y / len * 5)
+							catchui.Green.Position = UDim2.new(0, greenp.X + diff.X / len * 5, 0, greenp.Y + diff.Y / len * 5)
 						end
                     end
 					task.wait()
