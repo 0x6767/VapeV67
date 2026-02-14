@@ -6035,43 +6035,51 @@ mainapi.Scale = guipane:CreateToggle({
 	end,
 	Tooltip = 'Automatically rescales the gui using the screens resolution'
 })
+local guipriority = {
+	GUICategory = 1,
+	CombatCategory = 2,
+	BlatantCategory = 3,
+	RenderCategory = 4,
+	UtilityCategory = 5,
+	WorldCategory = 6,
+	InventoryCategory = 7,
+	MinigamesCategory = 8,
+	FriendsCategory = 9,
+	ProfilesCategory = 10
+}
+local function sortGUIWindows()
+	local categories = {}
+	for _, category in mainapi.Categories do
+		if category.Type ~= 'Overlay' then
+			table.insert(categories, category)
+		end
+	end
+	table.sort(categories, function(a, b)
+		return (guipriority[a.Object.Name] or 99) < (guipriority[b.Object.Name] or 99)
+	end)
+
+	local ind = 0
+	for _, category in categories do
+		local window = category.Object
+		if window.Visible then
+			window.Position = UDim2.fromOffset(6 + (ind % 8 * 230), 60 + (ind > 7 and 360 or 0))
+			ind += 1
+		end
+	end
+end
+local autoSortEnabled = false
 guipane:CreateToggle({
 	Name = 'Auto Sort',
 	Default = true,
-	Function = function(callback)
-		if callback then
-			repeat
-				local priority = {
-					GUICategory = 1,
-					CombatCategory = 2,
-					BlatantCategory = 3,
-					RenderCategory = 4,
-					UtilityCategory = 5,
-					WorldCategory = 6,
-					InventoryCategory = 7,
-					MinigamesCategory = 8,
-					FriendsCategory = 9,
-					ProfilesCategory = 10
-				}
-				local categories = {}
-				for _, v in mainapi.Categories do
-					if v.Type ~= 'Overlay' then
-						table.insert(categories, v)
-					end
+	Function = function(enabled)
+		autoSortEnabled = enabled
+		if enabled then
+			task.spawn(function()
+				while autoSortEnabled do
+					sortGUIWindows()
+					task.wait()
 				end
-				table.sort(categories, function(a, b)
-					return (priority[a.Object.Name] or 99) < (priority[b.Object.Name] or 99)
-				end)
-		
-				local ind = 0
-				for _, v in categories do
-					if v.Object.Visible then
-						v.Object.Position = UDim2.fromOffset(6 + (ind % 8 * 230), 60 + (ind > 7 and 360 or 0))
-						ind += 1
-					end
-				end
-				task.wait()
-			until not callback
+			end)
 		end
 	end
 })
@@ -6122,35 +6130,7 @@ guipane:CreateButton({
 guipane:CreateButton({
 	Name = 'Sort GUI',
 	Function = function()
-		local priority = {
-			GUICategory = 1,
-			CombatCategory = 2,
-			BlatantCategory = 3,
-			RenderCategory = 4,
-			UtilityCategory = 5,
-			WorldCategory = 6,
-			InventoryCategory = 7,
-			MinigamesCategory = 8,
-			FriendsCategory = 9,
-			ProfilesCategory = 10
-		}
-		local categories = {}
-		for _, v in mainapi.Categories do
-			if v.Type ~= 'Overlay' then
-				table.insert(categories, v)
-			end
-		end
-		table.sort(categories, function(a, b)
-			return (priority[a.Object.Name] or 99) < (priority[b.Object.Name] or 99)
-		end)
-
-		local ind = 0
-		for _, v in categories do
-			if v.Object.Visible then
-				v.Object.Position = UDim2.fromOffset(6 + (ind % 8 * 230), 60 + (ind > 7 and 360 or 0))
-				ind += 1
-			end
-		end
+		sortGUIWindows()
 	end,
 	Tooltip = 'Sorts GUI'
 })
