@@ -6035,6 +6035,46 @@ mainapi.Scale = guipane:CreateToggle({
 	end,
 	Tooltip = 'Automatically rescales the gui using the screens resolution'
 })
+local autosort = guipane:CreateToggle({
+	Name = 'Auto Sort',
+	Default = true,
+	Function = function(callback)
+		if callback then
+			repeat
+				local priority = {
+					GUICategory = 1,
+					CombatCategory = 2,
+					BlatantCategory = 3,
+					RenderCategory = 4,
+					UtilityCategory = 5,
+					WorldCategory = 6,
+					InventoryCategory = 7,
+					MinigamesCategory = 8,
+					FriendsCategory = 9,
+					ProfilesCategory = 10
+				}
+				local categories = {}
+				for _, v in mainapi.Categories do
+					if v.Type ~= 'Overlay' then
+						table.insert(categories, v)
+					end
+				end
+				table.sort(categories, function(a, b)
+					return (priority[a.Object.Name] or 99) < (priority[b.Object.Name] or 99)
+				end)
+		
+				local ind = 0
+				for _, v in categories do
+					if v.Object.Visible then
+						v.Object.Position = UDim2.fromOffset(6 + (ind % 8 * 230), 60 + (ind > 7 and 360 or 0))
+						ind += 1
+					end
+				end
+				task.wait()
+			until not autosort.Enabled
+		end
+	end
+})
 scaleslider = guipane:CreateSlider({
 	Name = 'Scale',
 	Min = 0.1,
