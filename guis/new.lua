@@ -6074,12 +6074,12 @@ guipane:CreateToggle({
 	Default = true,
 	Function = function(callback)
 		asort = callback
-		repeat
-			if asort then
+		if callback then
+			while asort do
 				sortgui()
+				task.wait()
 			end
-			task.wait()
-		until not asort
+		end
 	end
 })
 scaleslider = guipane:CreateSlider({
