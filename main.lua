@@ -9,8 +9,14 @@ if identifyexecutor then
 end
 
 local vape
-local rawLoadstring = loadstring
+local rawLoadstring = loadstring or load
 local loadstring = function(...)
+	if not rawLoadstring then
+		if vape then
+			vape:CreateNotification('Vape', 'Failed to load : loadstring unavailable', 30, 'alert')
+		end
+		return nil, 'loadstring unavailable'
+	end
 	local res, err = rawLoadstring(...)
 	if err and vape then
 		vape:CreateNotification('Vape', 'Failed to load : '..err, 30, 'alert')
@@ -117,7 +123,10 @@ local gui = readfile('vape67/profiles/gui.txt')
 if not isfolder('vape67/assets/'..gui) then
 	makefolder('vape67/assets/'..gui)
 end
-vape = loadstring(downloadFile('vape67/guis/'..gui..'.lua'), 'gui')()
+local guifunc = loadstring(downloadFile('vape67/guis/'..gui..'.lua'), 'gui')
+if type(guifunc) ~= 'function' then return end
+vape = guifunc()
+if type(vape) ~= 'table' then return end
 shared.vape = vape
 
 if not shared.VapeIndependent then
@@ -129,10 +138,13 @@ if not shared.VapeIndependent then
 	end
 
 	if isfile(placeScriptPath) then
-		loadstring(
+		local placefunc = loadstring(
 			readfile(placeScriptPath),
 			placeId
-		)(...)
+		)
+		if type(placefunc) == 'function' then
+			placefunc(...)
+		end
 	elseif not shared.VapeDeveloper then
 		local suc, res = pcall(function()
 			return game:HttpGet(
@@ -141,10 +153,13 @@ if not shared.VapeIndependent then
 			)
 		end)
 		if suc and res ~= '404: Not Found' then
-			loadstring(
+			local placefunc = loadstring(
 				downloadFile('vape67/games/'..placeId..'.lua'),
 				placeId
-			)(...)
+			)
+			if type(placefunc) == 'function' then
+				placefunc(...)
+			end
 		end
 	end
 	finishLoading()
