@@ -6069,16 +6069,17 @@ mainapi.Scale = guipane:CreateToggle({
 	Tooltip = 'Automatically rescales the gui using the screens resolution'
 })
 
-guipane:CreateToggle({
+asort = guipane:CreateToggle({
 	Name = 'Auto Sort',
 	Default = true,
 	Function = function(callback)
-		asort = callback
 		if callback then
-			while asort do
-				sortgui()
-				task.wait()
-			end
+			task.spawn(function()
+				repeat
+					sortgui()
+					task.wait()
+				until not asort.Enabled
+			end)
 		end
 	end
 })
