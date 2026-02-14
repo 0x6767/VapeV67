@@ -97,7 +97,8 @@ run(function ()
 						local len = math.sqrt(diff.X * diff.X + diff.Y * diff.Y)
 
 						if len > 0 then
-							catchui.Green.Position = UDim2.new(0, greenp.X + diff.X / len * 5, 0, greenp.Y + diff.Y / len * 5)
+							local movex = diff.X / len * 5
+							catchui.Green.Position = catchui.Green.Position + UDim2.new(0, movex, 0, 0)
 						end
                     end
 					task.wait()
