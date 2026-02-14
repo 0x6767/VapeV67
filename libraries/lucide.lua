@@ -1667,7 +1667,7 @@ local function normalize(name)
 	return tostring(name or ''):lower():gsub('%s+', '-'):gsub('_', '-')
 end
 
-local function resolveIcon(self, key)
+local function resolve(self, key)
 	local icons = self.Icons
 	if not icons then
 		return nil
@@ -1675,20 +1675,20 @@ local function resolveIcon(self, key)
 	return icons[key] or icons[key:gsub('_', '-')] or icons[key:gsub('-', '_')]
 end
 
-function lucide:Get(name, fallback)
+function lucide:get(name, fallback)
 	local key = normalize(name)
-	local icon = resolveIcon(self, key)
+	local icon = resolve(self, key)
 	if icon then
 		return icon
 	end
 
 	local alias = self.Aliases and self.Aliases[key]
 	if alias then
-		return resolveIcon(self, alias) or alias
+		return resolve(self, alias) or alias
 	end
 
-	local fallbackKey = normalize(fallback or 'circle')
-	return resolveIcon(self, fallbackKey) or ''
+	local key = normalize(fallback or 'circle')
+	return resolve(self, key) or ''
 end
 
 function lucide:GetUrl(name, fallback)
@@ -1702,18 +1702,19 @@ end
 function lucide:GetAssetPath(name, fallback)
 	local key = normalize(name)
 	local alias = self.Aliases and self.Aliases[key]
-	local icon = alias and normalize(alias) or key
+    local icon = alias and normalize(alias) or key
+	
 	icon = icon:gsub('_', '-')
 	return self.AssetRoot..icon..'.svg'
 end
 
-function lucide:GetAssetId(name, fallback)
-	return self:Get(name, fallback)
+function lucide:getid(name, fallback)
+	return self:get(name, fallback)
 end
 
-function lucide:Has(name)
+function lucide:has(name)
 	local key = normalize(name)
-	return resolveIcon(self, key) ~= nil or (self.Aliases and self.Aliases[key] ~= nil) or false
+	return resolve(self, key) ~= nil or (self.Aliases and self.Aliases[key] ~= nil) or false
 end
 
 return lucide
