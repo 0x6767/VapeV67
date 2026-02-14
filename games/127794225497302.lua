@@ -29,7 +29,7 @@ local vape = shared.vape
 local entitylib = vape.Libraries.entity
 local targetinfo = vape.Libraries.targetinfo
 
-for i,v in next, {'AimAssist', 'SilentAim', 'TriggerBot', 'Reach'} do
+for i,v in next, vape.mainapi.Modules do
 	vape:Remove(v)
 end
 
