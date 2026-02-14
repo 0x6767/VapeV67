@@ -5967,7 +5967,7 @@ modules:CreateToggle({
 ]]
 
 local guipane = mainapi.Categories.Main:CreateSettingsPane({Name = 'GUI'})
-local asort = false
+local asort
 local guipriority = {
 	GUICategory = 1,
 	CombatCategory = 2,
@@ -6066,10 +6066,12 @@ asort = guipane:CreateToggle({
 	Default = true,
 	Function = function(callback)
 		if callback then
-			repeat
-				sortgui()
-				task.wait()
-			until not asort.Enabled
+			task.spawn(function()
+				repeat
+					sortgui()
+					task.wait()
+				until not asort.Enabled
+			end)
 		end
 	end
 })
