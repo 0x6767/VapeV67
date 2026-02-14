@@ -351,6 +351,17 @@ end or function(path)
 	return getcustomassets[path] or ''
 end
 
+local lucidelib
+do
+	local suc, res = pcall(function()
+		return loadstring(
+			downloadFile('vape67/libraries/lucide.lua'),
+			'lucide'
+		)()
+	end)
+	lucidelib = suc and type(res) == 'table' and res or nil
+end
+
 local function getTableSize(tab)
 	local ind = 0
 	for _ in tab do ind += 1 end
@@ -509,6 +520,7 @@ mainapi.Libraries = {
 	color = color,
 	getcustomasset = getcustomasset,
 	getfontsize = getfontsize,
+	lucide = lucidelib,
 	tween = tween,
 	uipallet = uipallet,
 }
@@ -6077,14 +6089,12 @@ asort = guipane:CreateToggle({
 	Default = true,
 	Function = function(callback)
 		if callback then
-			task.spawn(function()
-				repeat
-					if mainapi.Dragging <= 0 then
-						sortgui()
-					end
-					task.wait()
-				until not asort.Enabled
-			end)
+			repeat
+				if mainapi.Dragging <= 0 then
+					sortgui()
+				end
+				task.wait()
+			until not asort.Enabled
 		end
 	end
 })
