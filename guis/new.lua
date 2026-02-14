@@ -6062,21 +6062,6 @@ scaleslider = guipane:CreateSlider({
 	Darker = true,
 	Visible = false
 })
-asort = guipane:CreateToggle({
-	Name = 'Auto Sort',
-	Default = true,
-	Function = function(enabled)
-		asortenabled = enabled
-		if enabled then
-			task.spawn(function()
-				while asortenabled do
-					sortgui()
-					task.wait()
-				end
-			end)
-		end
-	end
-})
 guipane:CreateDropdown({
 	Name = 'GUI Theme',
 	List = inputService.TouchEnabled and {'new', 'old'} or {'new', 'old', 'rise'},
