@@ -43,7 +43,8 @@ end
 
 local farm = vape:CreateCategory({
 	Name = 'Farm',
-	Icon = 'rbxassetid://119951075637174'
+    Icon = 'rbxassetid://119951075637174',
+	Size = UDim2.fromOffset(13, 14)
 })
 
 run(function ()
