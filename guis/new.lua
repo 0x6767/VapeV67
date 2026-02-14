@@ -5336,7 +5336,7 @@ function mainapi:CreateNotification(title, text, duration, type)
 		titlelabel.Position = UDim2.fromOffset(46, 16)
 		titlelabel.ZIndex = 5
 		titlelabel.BackgroundTransparency = 1
-		titlelabel.Text = "<stroke color='#FFFFFF' joins='round' thickness='0.3' transparency='0.5'>"..title..'</stroke>'
+		titlelabel.Text = '<stroke color='#FFFFFF' joins='round' thickness='0.3' transparency='0.5'>'..title..'</stroke>'
 		titlelabel.TextXAlignment = Enum.TextXAlignment.Left
 		titlelabel.TextYAlignment = Enum.TextYAlignment.Top
 		titlelabel.TextColor3 = Color3.fromRGB(209, 209, 209)
@@ -5354,7 +5354,7 @@ function mainapi:CreateNotification(title, text, duration, type)
 		textshadow.FontFace = uipallet.Font
 		textshadow.Parent = notification
 		local textlabel = textshadow:Clone()
-		textlabel.Position = UDim2.fromOffset(-1, -1)
+		textlabel.Position = UDim2.fromOffsest(-1, -1)
 		textlabel.Text = text
 		textlabel.TextColor3 = Color3.fromRGB(170, 170, 170)
 		textlabel.TextTransparency = 0
@@ -5485,7 +5485,7 @@ function mainapi:Load(skipgui, profile)
 			end
 			if v.Enabled ~= object.Enabled then
 				if skipgui then
-					if self.ToggleNotifications.Enabled then self:CreateNotification('Module Toggled', i.."<font color='#FFFFFF'> has been </font>"..(v.Enabled and "<font color='#5AFF5A'>Enabled</font>" or "<font color='#FF5A5A'>Disabled</font>").."<font color='#FFFFFF'>!</font>", 0.75) end
+					if self.ToggleNotifications.Enabled then self:CreateNotification('Module Toggled', i..'<font color='#FFFFFF'> has been </font>'..(v.Enabled and '<font color='#5AFF5A'>Enabled</font>' or '<font color='#FF5A5A'>Disabled</font>')..'<font color='#FFFFFF'>!</font>', 0.75) end
 				end
 				object:Toggle(true)
 			end
@@ -6047,7 +6047,7 @@ mainapi.Blur = guipane:CreateToggle({
 guipane:CreateToggle({
 	Name = 'GUI bind indicator',
 	Default = true,
-	Tooltip = "Displays a message indicating your GUI upon injecting.\nI.E. 'Press RSHIFT to open GUI'"
+	Tooltip = 'Displays a message indicating your GUI upon injecting.\nI.E. 'Press RSHIFT to open GUI''
 })
 guipane:CreateToggle({
 	Name = 'Show tooltips',
@@ -6515,7 +6515,7 @@ local function getModuleDisplayText(name, module)
 		return text
 	end
 	local extracolor = textguistyle.Value == 'Simple' and '#BEBEBE' or '#A8A8A8'
-	return text.." <font color='"..extracolor.."'>"..formatTextGUIText(extra)..'</font>'
+	return text..' <font color=''..extracolor..''>'..formatTextGUIText(extra)..'</font>'
 end
 
 local function updateTextLabel(label, right)
@@ -7093,7 +7093,7 @@ mainapi:Clean(inputService.InputBegan:Connect(function(inputObj)
 			if checkKeybinds(mainapi.HeldKeybinds, v.Bind, inputObj.KeyCode.Name) then
 				toggled = true
 				if mainapi.ToggleNotifications.Enabled then
-					mainapi:CreateNotification('Module Toggled', i.."<font color='#FFFFFF'> has been </font>"..(not v.Enabled and "<font color='#5AFF5A'>Enabled</font>" or "<font color='#FF5A5A'>Disabled</font>").."<font color='#FFFFFF'>!</font>", 0.75)
+					mainapi:CreateNotification('Module Toggled', i..'<font color='#FFFFFF'> has been </font>'..(not v.Enabled and '<font color='#5AFF5A'>Enabled</font>' or '<font color='#FF5A5A'>Disabled</font>')..'<font color='#FFFFFF'>!</font>', 0.75)
 				end
 				v:Toggle(true)
 			end
