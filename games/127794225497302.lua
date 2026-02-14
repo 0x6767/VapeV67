@@ -29,23 +29,22 @@ local vape = shared.vape
 local entitylib = vape.Libraries.entity
 local targetinfo = vape.Libraries.targetinfo
 
-local function getFish(Range)
-    local Target = nil
-    local RRange = Range
-	
-    for i, v in next, workspace.Game.Fish.client:GetChildren() do
-        local Magnitude = (v.RootPart.Position - lplr.Character.HumanoidRootPart.Position).Magnitude
-        if Magnitude < RRange then
-            Target = v
-        end
-    end
-	return Target
-end
-
 run(function ()
     local Catch
     local Range
     local fish
+
+	local function getFish()
+		local Target = nil
+		
+		for i, v in next, workspace.Game.Fish.client:GetChildren() do
+			local Magnitude = (v.RootPart.Position - lplr.Character.HumanoidRootPart.Position).Magnitude
+			if Magnitude < Range.Value then
+				Target = v
+			end
+		end
+		return Target
+	end
 	
 	Catch = vape.Categories.Combat:CreateModule({
 		Name = 'Auto Catch',
@@ -83,12 +82,17 @@ run(function ()
 			if callback then
 				repeat
                     if catchui.Parent then
-                        catchui.Green.Position = UDim2.new(0, catchui.Marker.Fish.Position.X.Scale, 0,
-                            catchui.Marker.Fish.Position.Y.Scale)
+                        catchui.Green.Size = UDim2.new(1, 0, 1, 0)
+						if Gradient.Enabled then
+							catchui.Gradient.BackgroundColor3 = Color3.fromRGB(136, 194, 89)
+						end
                     end
 					task.wait()
 				until not Minigame.Enabled
 			end
 		end
+    })
+	Gradient = Minigame:CreateToggle({
+		Name = 'Gradient',
 	})
 end)
