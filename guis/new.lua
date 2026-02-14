@@ -5988,6 +5988,39 @@ modules:CreateToggle({
 ]]
 
 local guipane = mainapi.Categories.Main:CreateSettingsPane({Name = 'GUI'})
+local asort = false
+local guipriority = {
+	GUICategory = 1,
+	CombatCategory = 2,
+	BlatantCategory = 3,
+	RenderCategory = 4,
+	UtilityCategory = 5,
+	WorldCategory = 6,
+	InventoryCategory = 7,
+	MinigamesCategory = 8,
+	FriendsCategory = 9,
+	ProfilesCategory = 10
+}
+local function sortgui()
+	local categories = {}
+	for _, category in mainapi.Categories do
+		if category.Type ~= 'Overlay' then
+			table.insert(categories, category)
+		end
+	end
+	table.sort(categories, function(a, b)
+		return (guipriority[a.Object.Name] or 99) < (guipriority[b.Object.Name] or 99)
+	end)
+
+	local ind = 0
+	for _, category in categories do
+		local window = category.Object
+		if window.Visible then
+			window.Position = UDim2.fromOffset(6 + (ind % 8 * 230), 60 + (ind > 7 and 360 or 0))
+			ind += 1
+		end
+	end
+end
 mainapi.Blur = guipane:CreateToggle({
 	Name = 'Blur background',
 	Function = function()
@@ -6035,52 +6068,18 @@ mainapi.Scale = guipane:CreateToggle({
 	end,
 	Tooltip = 'Automatically rescales the gui using the screens resolution'
 })
-local guipriority = {
-	GUICategory = 1,
-	CombatCategory = 2,
-	BlatantCategory = 3,
-	RenderCategory = 4,
-	UtilityCategory = 5,
-	WorldCategory = 6,
-	InventoryCategory = 7,
-	MinigamesCategory = 8,
-	FriendsCategory = 9,
-	ProfilesCategory = 10
-}
-local function sortGUIWindows()
-	local categories = {}
-	for _, category in mainapi.Categories do
-		if category.Type ~= 'Overlay' then
-			table.insert(categories, category)
-		end
-	end
-	table.sort(categories, function(a, b)
-		return (guipriority[a.Object.Name] or 99) < (guipriority[b.Object.Name] or 99)
-	end)
 
-	local ind = 0
-	for _, category in categories do
-		local window = category.Object
-		if window.Visible then
-			window.Position = UDim2.fromOffset(6 + (ind % 8 * 230), 60 + (ind > 7 and 360 or 0))
-			ind += 1
-		end
-	end
-end
-local autoSortEnabled = false
 guipane:CreateToggle({
 	Name = 'Auto Sort',
 	Default = true,
-	Function = function(enabled)
-		autoSortEnabled = enabled
-		if enabled then
-			task.spawn(function()
-				while autoSortEnabled do
-					sortGUIWindows()
-					task.wait()
-				end
-			end)
-		end
+	Function = function(callback)
+		asort = callback
+		repeat
+			if asort then
+				sortgui()
+			end
+			task.wait()
+		until not asort
 	end
 })
 scaleslider = guipane:CreateSlider({
@@ -6130,7 +6129,7 @@ guipane:CreateButton({
 guipane:CreateButton({
 	Name = 'Sort GUI',
 	Function = function()
-		sortGUIWindows()
+		sortgui()
 	end,
 	Tooltip = 'Sorts GUI'
 })
