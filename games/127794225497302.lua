@@ -93,7 +93,7 @@ run(function ()
 						greenp = catchui.Green.AbsolutePosition + catchui.Green.AbsoluteSize / 2
                         fishp = catchui.Marker.Fish.AbsolutePosition + catchui.Marker.Fish.AbsoluteSize / 2
 						
-						local diff = greenp - fishp
+						local diff = fishp - greenp
                         local len = math.sqrt(diff.X * diff.X + diff.Y * diff.Y)
 						
 						if len > 0 then
