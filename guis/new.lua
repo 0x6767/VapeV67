@@ -5967,41 +5967,6 @@ modules:CreateToggle({
 ]]
 
 local guipane = mainapi.Categories.Main:CreateSettingsPane({Name = 'GUI'})
-local asort
-local asortenabled = false
-local asortconnection
-local guipriority = {
-	GUICategory = 1,
-	CombatCategory = 2,
-	BlatantCategory = 3,
-	RenderCategory = 4,
-	UtilityCategory = 5,
-	WorldCategory = 6,
-	InventoryCategory = 7,
-	MinigamesCategory = 8,
-	FriendsCategory = 9,
-	ProfilesCategory = 10
-}
-local function sortgui()
-	local categories = {}
-	for _, category in mainapi.Categories do
-		if category.Type ~= 'Overlay' then
-			table.insert(categories, category)
-		end
-	end
-	table.sort(categories, function(a, b)
-		return (guipriority[a.Object.Name] or 99) < (guipriority[b.Object.Name] or 99)
-	end)
-
-	local ind = 0
-	for _, category in categories do
-		local window = category.Object
-		if window.Visible then
-			window.Position = UDim2.fromOffset(6 + (ind % 8 * 230), 60 + (ind > 7 and 360 or 0))
-			ind += 1
-		end
-	end
-end
 mainapi.Blur = guipane:CreateToggle({
 	Name = 'Blur background',
 	Function = function()
