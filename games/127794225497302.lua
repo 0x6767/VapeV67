@@ -102,7 +102,8 @@ run(function ()
 		Name = 'Size',
 		Min = 0,
 		Max = 1,
-		Default = 10,
+        Default = 1,
+		Decimal = 10,
 		Suffix = ''
 	})
 end)
