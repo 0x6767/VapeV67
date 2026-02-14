@@ -28,7 +28,6 @@ local assetfunction = getcustomasset
 local vape = shared.vape
 local entitylib = vape.Libraries.entity
 local targetinfo = vape.Libraries.targetinfo
-local lucide = vape.Libraries.lucide
 
 local hmm = {}
 for k, v in vape.Modules do
@@ -44,7 +43,7 @@ end
 
 local farm = vape:CreateCategory({
 	Name = 'Farm',
-	Icon = lucide:get('fishing-hook')
+	Icon = 'rbxassetid://119951075637174'
 })
 
 run(function ()

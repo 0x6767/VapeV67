@@ -1,6 +1,5 @@
 local mainapi = {
 	Categories = {},
-	Dragging = 0,
 	GUIColor = {
 		Hue = 0.46,
 		Sat = 0.96,
@@ -23,8 +22,6 @@ local mainapi = {
 	Version = '4.18',
 	Windows = {}
 }
-
-function mainapi:UpdateTextGUI() end
 
 local cloneref = cloneref or function(obj)
 	return obj
@@ -314,28 +311,13 @@ local function createMobileButton(buttonapi, position)
 end
 
 local function downloadFile(path, func)
-	local localPath = select(1, path:gsub('^vape67/', ''))
-	local commitPath = 'vape67/profiles/commit.txt'
-	local commit = (isfile(commitPath) and readfile(commitPath) or '')
-	commit = commit ~= '' and commit or 'main'
-
-	if isfile(localPath) then
-		return (func or readfile)(localPath)
-	end
-
 	if not isfile(path) then
 		createDownloader(path)
 		local suc, res = pcall(function()
-			return game:HttpGet(
-				'https://raw.githubusercontent.com/0x6767/VapeV67/'..commit..'/'..localPath,
-				true
-			)
+			return game:HttpGet('https://raw.githubusercontent.com/0x6767/Vape67/'..readfile('vape67/profiles/commit.txt')..'/'..select(1, path:gsub('vape67/', '')), true)
 		end)
 		if not suc or res == '404: Not Found' then
-			if isfile(path) then
-				return (func or readfile)(path)
-			end
-			return func and '' or ''
+			error(res)
 		end
 		if path:find('.lua') then
 			res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res
@@ -349,17 +331,6 @@ getcustomasset = not inputService.TouchEnabled and assetfunction and function(pa
 	return downloadFile(path, assetfunction)
 end or function(path)
 	return getcustomassets[path] or ''
-end
-
-local lucidelib
-do
-	local suc, res = pcall(function()
-		return loadstring(
-			downloadFile('vape67/libraries/lucide.lua'),
-			'lucide'
-		)()
-	end)
-	lucidelib = suc and type(res) == 'table' and res or nil
 end
 
 local function getTableSize(tab)
@@ -391,7 +362,6 @@ local function makeDraggable(gui, window)
 			(inputObj.UserInputType == Enum.UserInputType.MouseButton1 or inputObj.UserInputType == Enum.UserInputType.Touch)
 			and (inputObj.Position.Y - gui.AbsolutePosition.Y < 40 or window)
 		then
-			mainapi.Dragging += 1
 			local dragPosition = Vector2.new(
 				gui.AbsolutePosition.X - inputObj.Position.X,
 				gui.AbsolutePosition.Y - inputObj.Position.Y + guiService:GetGuiInset().Y
@@ -411,7 +381,6 @@ local function makeDraggable(gui, window)
 			local ended
 			ended = inputObj.Changed:Connect(function()
 				if inputObj.UserInputState == Enum.UserInputState.End then
-					mainapi.Dragging = math.max(mainapi.Dragging - 1, 0)
 					if changed then
 						changed:Disconnect()
 					end
@@ -520,7 +489,6 @@ mainapi.Libraries = {
 	color = color,
 	getcustomasset = getcustomasset,
 	getfontsize = getfontsize,
-	lucide = lucidelib,
 	tween = tween,
 	uipallet = uipallet,
 }
@@ -5336,7 +5304,7 @@ function mainapi:CreateNotification(title, text, duration, type)
 		titlelabel.Position = UDim2.fromOffset(46, 16)
 		titlelabel.ZIndex = 5
 		titlelabel.BackgroundTransparency = 1
-		titlelabel.Text = '<stroke color='#FFFFFF' joins='round' thickness='0.3' transparency='0.5'>'..title..'</stroke>'
+		titlelabel.Text = "<stroke color='#FFFFFF' joins='round' thickness='0.3' transparency='0.5'>"..title..'</stroke>'
 		titlelabel.TextXAlignment = Enum.TextXAlignment.Left
 		titlelabel.TextYAlignment = Enum.TextYAlignment.Top
 		titlelabel.TextColor3 = Color3.fromRGB(209, 209, 209)
@@ -5354,7 +5322,7 @@ function mainapi:CreateNotification(title, text, duration, type)
 		textshadow.FontFace = uipallet.Font
 		textshadow.Parent = notification
 		local textlabel = textshadow:Clone()
-		textlabel.Position = UDim2.fromOffsest(-1, -1)
+		textlabel.Position = UDim2.fromOffset(-1, -1)
 		textlabel.Text = text
 		textlabel.TextColor3 = Color3.fromRGB(170, 170, 170)
 		textlabel.TextTransparency = 0
@@ -5485,7 +5453,7 @@ function mainapi:Load(skipgui, profile)
 			end
 			if v.Enabled ~= object.Enabled then
 				if skipgui then
-					if self.ToggleNotifications.Enabled then self:CreateNotification('Module Toggled', i..'<font color='#FFFFFF'> has been </font>'..(v.Enabled and '<font color='#5AFF5A'>Enabled</font>' or '<font color='#FF5A5A'>Disabled</font>')..'<font color='#FFFFFF'>!</font>', 0.75) end
+					if self.ToggleNotifications.Enabled then self:CreateNotification('Module Toggled', i.."<font color='#FFFFFF'> has been </font>"..(v.Enabled and "<font color='#5AFF5A'>Enabled</font>" or "<font color='#FF5A5A'>Disabled</font>").."<font color='#FFFFFF'>!</font>", 0.75) end
 				end
 				object:Toggle(true)
 			end
@@ -5943,9 +5911,7 @@ general:CreateButton({
 		if shared.VapeDeveloper then
 			loadstring(readfile('vape67/loader.lua'), 'loader')()
 		else
-			local commit = (isfile('vape67/profiles/commit.txt') and readfile('vape67/profiles/commit.txt') or '')
-			commit = commit ~= '' and commit or 'main'
-			loadstring(game:HttpGet('https://raw.githubusercontent.com/0x6767/VapeV67/'..commit..'/loader.lua', true))()
+			loadstring(game:HttpGet('https://raw.githubusercontent.com/0x6767/Vape67/'..readfile('vape67/profiles/commit.txt')..'/loader.lua', true))()
 		end
 	end,
 	Tooltip = 'This will set your profile to the default settings of Vape'
@@ -5964,9 +5930,7 @@ general:CreateButton({
 		if shared.VapeDeveloper then
 			loadstring(readfile('vape67/loader.lua'), 'loader')()
 		else
-			local commit = (isfile('vape67/profiles/commit.txt') and readfile('vape67/profiles/commit.txt') or '')
-			commit = commit ~= '' and commit or 'main'
-			loadstring(game:HttpGet('https://raw.githubusercontent.com/0x6767/VapeV67/'..commit..'/loader.lua', true))()
+			loadstring(game:HttpGet('https://raw.githubusercontent.com/0x6767/Vape67/'..readfile('vape67/profiles/commit.txt')..'/loader.lua', true))()
 		end
 	end,
 	Tooltip = 'Reloads vape for debugging purposes'
@@ -6047,7 +6011,7 @@ mainapi.Blur = guipane:CreateToggle({
 guipane:CreateToggle({
 	Name = 'GUI bind indicator',
 	Default = true,
-	Tooltip = 'Displays a message indicating your GUI upon injecting.\nI.E. 'Press RSHIFT to open GUI''
+	Tooltip = "Displays a message indicating your GUI upon injecting.\nI.E. 'Press RSHIFT to open GUI'"
 })
 guipane:CreateToggle({
 	Name = 'Show tooltips',
@@ -6083,21 +6047,6 @@ mainapi.Scale = guipane:CreateToggle({
 	end,
 	Tooltip = 'Automatically rescales the gui using the screens resolution'
 })
-
-asort = guipane:CreateToggle({
-	Name = 'Auto Sort',
-	Default = true,
-	Function = function(callback)
-		if callback then
-			repeat
-				if mainapi.Dragging <= 0 then
-					sortgui()
-				end
-				task.wait()
-			until not asort.Enabled
-		end
-	end
-})
 scaleslider = guipane:CreateSlider({
 	Name = 'Scale',
 	Min = 0.1,
@@ -6111,6 +6060,34 @@ scaleslider = guipane:CreateSlider({
 	Default = 1,
 	Darker = true,
 	Visible = false
+})
+asort = guipane:CreateToggle({
+	Name = 'Auto Sort',
+	Default = true,
+	Function = function(callback)
+		if callback then
+			repeat
+				sortgui()
+				task.wait()
+			until not asort.Enabled
+		end
+	end
+})
+guipane:CreateDropdown({
+	Name = 'GUI Theme',
+	List = inputService.TouchEnabled and {'new', 'old'} or {'new', 'old', 'rise'},
+	Function = function(val, mouse)
+		if mouse then
+			writefile('vape67/profiles/gui.txt', val)
+			shared.vapereload = true
+			if shared.VapeDeveloper then
+				loadstring(readfile('vape67/loader.lua'), 'loader')()
+			else
+				loadstring(game:HttpGet('https://raw.githubusercontent.com/0x6767/Vape67/'..readfile('vape67/profiles/commit.txt')..'/loader.lua', true))()
+			end
+		end
+	end,
+	Tooltip = 'new - The newest vape theme to since v4.05\nold - The vape theme pre v4.05\nrise - Rise 6.0'
 })
 mainapi.RainbowMode = guipane:CreateDropdown({
 	Name = 'Rainbow Mode',
@@ -6142,10 +6119,40 @@ guipane:CreateButton({
 	end,
 	Tooltip = 'This will reset your GUI back to default'
 })
+
+
 guipane:CreateButton({
 	Name = 'Sort GUI',
 	Function = function()
-		sortgui()
+		local priority = {
+			GUICategory = 1,
+			CombatCategory = 2,
+			BlatantCategory = 3,
+			RenderCategory = 4,
+			UtilityCategory = 5,
+			WorldCategory = 6,
+			InventoryCategory = 7,
+			MinigamesCategory = 8,
+			FriendsCategory = 9,
+			ProfilesCategory = 10
+		}
+		local categories = {}
+		for _, v in mainapi.Categories do
+			if v.Type ~= 'Overlay' then
+				table.insert(categories, v)
+			end
+		end
+		table.sort(categories, function(a, b)
+			return (priority[a.Object.Name] or 99) < (priority[b.Object.Name] or 99)
+		end)
+
+		local ind = 0
+		for _, v in categories do
+			if v.Object.Visible then
+				v.Object.Position = UDim2.fromOffset(6 + (ind % 8 * 230), 60 + (ind > 7 and 360 or 0))
+				ind += 1
+			end
+		end
 	end,
 	Tooltip = 'Sorts GUI'
 })
@@ -6200,13 +6207,6 @@ local textguisort = textgui:CreateDropdown({
 		mainapi:UpdateTextGUI()
 	end
 })
-local textguistyle = textgui:CreateDropdown({
-	Name = 'Arraylist Style',
-	List = {'Vape', 'Simple'},
-	Function = function()
-		mainapi:UpdateTextGUI()
-	end
-})
 local textguifont = textgui:CreateFont({
 	Name = 'Font',
 	Blacklist = 'Arial',
@@ -6244,24 +6244,9 @@ local textguiscale = textgui:CreateSlider({
 		mainapi:UpdateTextGUI()
 	end
 })
-local textguiautosort = textgui:CreateToggle({
-	Name = 'Auto Sort',
-	Tooltip = 'Automatically updates arraylist ordering in real-time.',
-	Default = true,
-	Function = function()
-		mainapi:UpdateTextGUI()
-	end
-})
 local textguishadow = textgui:CreateToggle({
 	Name = 'Shadow',
 	Tooltip = 'Renders shadowed text.',
-	Function = function()
-		mainapi:UpdateTextGUI()
-	end
-})
-local textguilowercase = textgui:CreateToggle({
-	Name = 'Lowercase',
-	Tooltip = 'Renders text gui labels in lowercase.',
 	Function = function()
 		mainapi:UpdateTextGUI()
 	end
@@ -6502,57 +6487,6 @@ VapeLabelSorter.HorizontalAlignment = Enum.HorizontalAlignment.Right
 VapeLabelSorter.VerticalAlignment = Enum.VerticalAlignment.Top
 VapeLabelSorter.SortOrder = Enum.SortOrder.LayoutOrder
 VapeLabelSorter.Parent = VapeLabelHolder
-
-local function formatTextGUIText(text)
-	text = text or ''
-	return textguilowercase.Enabled and text:lower() or text
-end
-
-local function getModuleDisplayText(name, module)
-	local extra = module and module.ExtraText and module.ExtraText()
-	local text = formatTextGUIText(name)
-	if not extra or extra == '' then
-		return text
-	end
-	local extracolor = textguistyle.Value == 'Simple' and '#BEBEBE' or '#A8A8A8'
-	return text..' <font color=''..extracolor..''>'..formatTextGUIText(extra)..'</font>'
-end
-
-local function updateTextLabel(label, right)
-	local module = label.Module
-	local text = getModuleDisplayText(label.Object.Name, module)
-	local textsize = textguihd.Enabled and 18 or 15
-	label.Text.Text = text
-	label.Text.TextSize = textsize
-	label.Text.Position = UDim2.fromOffset(right and 3 or 6, 2)
-	local size = getfontsize(removeTags(text), textsize, label.Text.FontFace)
-	label.Text.Size = UDim2.fromOffset(size.X, size.Y)
-	if label.Shadow then
-		label.Shadow.Position = UDim2.fromOffset(label.Text.Position.X.Offset + 1, label.Text.Position.Y.Offset + 1)
-		label.Shadow.Text = removeTags(text)
-		label.Shadow.Size = label.Text.Size
-	end
-	return size
-end
-
-local function sortTextLabels()
-	if textguisort.Value == 'Alphabetical' then
-		table.sort(VapeLabels, function(a, b)
-			return a.Text.Text < b.Text.Text
-		end)
-	else
-		table.sort(VapeLabels, function(a, b)
-			return a.Text.Size.X.Offset > b.Text.Size.X.Offset
-		end)
-	end
-
-	for i, v in VapeLabels do
-		if v.Color then
-			v.Color.Parent.Line.Visible = i ~= 1
-		end
-		v.Object.LayoutOrder = i
-	end
-end
 
 --[[
 	Target Info
@@ -6811,16 +6745,10 @@ function mainapi:UpdateTextGUI(afterload)
 	if not afterload and not mainapi.Loaded then return end
 	if textgui.Button.Enabled then
 		local right = textgui.Children.AbsolutePosition.X > (gui.AbsoluteSize.X / 2)
-		local hdmode = textguihd.Enabled
-		VapeLogo.Size = hdmode and UDim2.fromOffset(96, 26) or UDim2.fromOffset(80, 21)
-		VapeLogoV4.Size = hdmode and UDim2.fromOffset(43, 30) or UDim2.fromOffset(33, 18)
-		VapeLogoV4.Position = hdmode and UDim2.new(1, 1, 0, -2) or UDim2.new(1, 1, 0, 1)
-		VapeLogoShadow.Logo2.Size = VapeLogoV4.Size
-		VapeLogoShadow.Logo2.Position = VapeLogoV4.Position
 		VapeLogo.Visible = textguiwatermark.Enabled
-		VapeLogo.Position = right and UDim2.new(1 / VapeTextScale.Scale, -(hdmode and 141 or 113), 0, hdmode and 4 or 6) or UDim2.fromOffset(0, hdmode and 4 or 6)
+		VapeLogo.Position = right and UDim2.new(1 / VapeTextScale.Scale, -113, 0, 6) or UDim2.fromOffset(0, 6)
 		VapeLogoShadow.Visible = textguishadow.Enabled
-		VapeLabelCustom.Text = formatTextGUIText(textguibox.Value)
+		VapeLabelCustom.Text = textguibox.Value
 		VapeLabelCustom.FontFace = textguifontcustom.Value
 		VapeLabelCustom.Visible = VapeLabelCustom.Text ~= '' and textguitext.Enabled
 		VapeLabelCustomShadow.Visible = VapeLabelCustom.Visible and textguishadow.Enabled
@@ -6883,15 +6811,14 @@ function mainapi:UpdateTextGUI(afterload)
 				holdertext.Position = UDim2.fromOffset(right and 3 or 6, 2)
 				holdertext.BackgroundTransparency = 1
 				holdertext.BorderSizePixel = 0
-				holdertext.Text = getModuleDisplayText(i, v)
-				holdertext.TextSize = hdmode and 18 or 15
+				holdertext.Text = i..(v.ExtraText and " <font color='#A8A8A8'>"..v.ExtraText()..'</font>' or '')
+				holdertext.TextSize = 15
 				holdertext.FontFace = textguifont.Value
 				holdertext.RichText = true
 				local size = getfontsize(removeTags(holdertext.Text), holdertext.TextSize, holdertext.FontFace)
 				holdertext.Size = UDim2.fromOffset(size.X, size.Y)
-				local holderdrop
 				if textguishadow.Enabled then
-					holderdrop = holdertext:Clone()
+					local holderdrop = holdertext:Clone()
 					holderdrop.Position = UDim2.fromOffset(holdertext.Position.X.Offset + 1, holdertext.Position.Y.Offset + 1)
 					holderdrop.Text = removeTags(holdertext.Text)
 					holderdrop.TextColor3 = Color3.new()
@@ -6918,35 +6845,33 @@ function mainapi:UpdateTextGUI(afterload)
 				table.insert(VapeLabels, {
 					Object = holder,
 					Text = holdertext,
-					Shadow = holderdrop,
 					Background = holderbackground,
 					Color = holdercolorline,
-					Enabled = v.Enabled,
-					Module = v
+					Enabled = v.Enabled
 				})
 			end
 		end
 
-		sortTextLabels()
+		if textguisort.Value == 'Alphabetical' then
+			table.sort(VapeLabels, function(a, b)
+				return a.Text.Text < b.Text.Text
+			end)
+		else
+			table.sort(VapeLabels, function(a, b)
+				return a.Text.Size.X.Offset > b.Text.Size.X.Offset
+			end)
+		end
+
+		for i, v in VapeLabels do
+			if v.Color then
+				v.Color.Parent.Line.Visible = i ~= 1
+			end
+			v.Object.LayoutOrder = i
+		end
 	end
 
 	mainapi:UpdateGUI(mainapi.GUIColor.Hue, mainapi.GUIColor.Sat, mainapi.GUIColor.Value, true)
 end
-
-local textguilastautosort = 0
-mainapi:Clean(runService.Heartbeat:Connect(function()
-	if not mainapi.Loaded or not textgui.Button.Enabled or not textguiautosort.Enabled then return end
-	if tick() - textguilastautosort < 0.12 then return end
-	textguilastautosort = tick()
-	local right = textgui.Children.AbsolutePosition.X > (gui.AbsoluteSize.X / 2)
-	for _, v in VapeLabels do
-		if v.Module and v.Module.Enabled then
-			local size = updateTextLabel(v, right)
-			v.Object.Size = UDim2.fromOffset(size.X + 10, size.Y + (textguibackground.Enabled and 5 or 3))
-		end
-	end
-	sortTextLabels()
-end))
 
 function mainapi:UpdateGUI(hue, sat, val, default)
 	if mainapi.Loaded == nil then return end
@@ -7093,7 +7018,7 @@ mainapi:Clean(inputService.InputBegan:Connect(function(inputObj)
 			if checkKeybinds(mainapi.HeldKeybinds, v.Bind, inputObj.KeyCode.Name) then
 				toggled = true
 				if mainapi.ToggleNotifications.Enabled then
-					mainapi:CreateNotification('Module Toggled', i..'<font color='#FFFFFF'> has been </font>'..(not v.Enabled and '<font color='#5AFF5A'>Enabled</font>' or '<font color='#FF5A5A'>Disabled</font>')..'<font color='#FFFFFF'>!</font>', 0.75)
+					mainapi:CreateNotification('Module Toggled', i.."<font color='#FFFFFF'> has been </font>"..(not v.Enabled and "<font color='#5AFF5A'>Enabled</font>" or "<font color='#FF5A5A'>Disabled</font>").."<font color='#FFFFFF'>!</font>", 0.75)
 				end
 				v:Toggle(true)
 			end
