@@ -79,4 +79,9 @@ if not shared.VapeDeveloper then
 	writefile('vape67/profiles/commit.txt', commit)
 end
 
-return loadstring(downloadFile('vape67/main.lua'), 'main')()
+local mainfunc = loadstring(downloadFile('vape67/main.lua'), 'main')
+if type(mainfunc) == 'function' then
+	return mainfunc()
+end
+return nil
+

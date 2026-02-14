@@ -7,14 +7,34 @@ end
 local delfile = delfile or function(file)
 	writefile(file, '')
 end
+local commitPath = 'vape67/profiles/commit.txt'
+
+local function getCommit()
+	if isfile(commitPath) then
+		local commit = readfile(commitPath)
+		if commit ~= '' then
+			return commit
+		end
+	end
+	return 'main'
+end
 
 local function downloadFile(path, func)
+	local localPath = select(1, path:gsub('^vape67/', ''))
+	if isfile(localPath) then
+		return (func or readfile)(localPath)
+	end
+
 	if not isfile(path) then
+		local commit = getCommit()
 		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/0x6767/Vape67/'..readfile('vape67/profiles/commit.txt')..'/'..select(1, path:gsub('vape67/', '')), true)
+			return game:HttpGet('https://raw.githubusercontent.com/0x6767/VapeV67/'..commit..'/'..localPath, true)
 		end)
 		if not suc or res == '404: Not Found' then
-			error(res)
+			if isfile(path) then
+				return (func or readfile)(path)
+			end
+			return func and '' or ''
 		end
 		if path:find('.lua') then
 			res = '--This watermark is used to delete the file if its cached, remove it to make the file persist after vape updates.\n'..res
@@ -56,4 +76,9 @@ if not shared.VapeDeveloper then
 	writefile('vape67/profiles/commit.txt', commit)
 end
 
-return loadstring(downloadFile('vape67/main.lua'), 'main')()
+local mainfunc = loadstring(downloadFile('vape67/main.lua'), 'main')
+if type(mainfunc) == 'function' then
+	return mainfunc()
+end
+return nil
+
