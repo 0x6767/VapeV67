@@ -5969,6 +5969,7 @@ modules:CreateToggle({
 local guipane = mainapi.Categories.Main:CreateSettingsPane({Name = 'GUI'})
 local asort
 local asortenabled = false
+local asortconnection
 local guipriority = {
 	GUICategory = 1,
 	CombatCategory = 2,
@@ -6061,6 +6062,25 @@ scaleslider = guipane:CreateSlider({
 	Default = 1,
 	Darker = true,
 	Visible = false
+})
+asort = guipane:CreateToggle({
+	Name = 'Auto Sort',
+	Default = true,
+	Function = function(enabled)
+		asortenabled = enabled
+		if asortconnection then
+			asortconnection:Disconnect()
+			asortconnection = nil
+		end
+		if enabled then
+			sortgui()
+			asortconnection = runService.Heartbeat:Connect(function()
+				if asortenabled then
+					sortgui()
+				end
+			end)
+		end
+	end
 })
 guipane:CreateDropdown({
 	Name = 'GUI Theme',
