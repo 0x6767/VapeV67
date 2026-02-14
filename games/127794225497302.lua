@@ -74,7 +74,9 @@ end)
 run(function ()
     local Minigame
 	local Color
+	local Legit
 	local catchui = lplr.PlayerGui.Main.CatchingBar.Frame.Bar.Catch
+	local greenp, fishp, info
 
 	Minigame = vape.Categories.Combat:CreateModule({
 		Name = 'Auto Minigame',
@@ -82,9 +84,23 @@ run(function ()
 			if callback then
 				repeat
                     if catchui.Parent then
-                        catchui.Green.Size = UDim2.new(1, 0, 1, 0)
-						if Gradient.Enabled then
-							catchui.Gradient.BackgroundColor3 = Color3.fromRGB(136, 194, 89)
+						if not Legit.Enabled then
+							catchui.Green.Size = UDim2.new(1, 0, 1, 0)
+							if Gradient.Enabled then
+								catchui.Gradient.BackgroundColor3 = Color3.fromRGB(136, 194, 89)
+							end
+						end
+						greenp = catchui.Green.AbsolutePosition + catchui.Green.AbsoluteSize / 2
+						fishp = catchui.Marker.Fish.AbsolutePosition + catchui.Marker.Fish.AbsoluteSize / 2
+
+						if (greenp - fishp).Magnitude > 3 then
+							mouse1press()
+							info = true
+						else
+							if info then
+								mouse1release()
+								info = false
+							end
 						end
                     end
 					task.wait()
@@ -94,5 +110,8 @@ run(function ()
     })
 	Gradient = Minigame:CreateToggle({
 		Name = 'Gradient',
+	})
+	Legit = Minigame:CreateToggle({
+		Name = 'Legit',
 	})
 end)
