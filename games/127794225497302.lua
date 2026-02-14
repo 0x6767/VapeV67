@@ -1,4 +1,3 @@
---!no-universal
 local run = function(func)
 	func()
 end
@@ -8,168 +7,111 @@ end
 
 local playersService = cloneref(game:GetService('Players'))
 local replicatedStorage = cloneref(game:GetService('ReplicatedStorage'))
+local runService = cloneref(game:GetService('RunService'))
+local inputService = cloneref(game:GetService('UserInputService'))
+local tweenService = cloneref(game:GetService('TweenService'))
+local httpService = cloneref(game:GetService('HttpService'))
+local textChatService = cloneref(game:GetService('TextChatService'))
+local collectionService = cloneref(game:GetService('CollectionService'))
+local contextActionService = cloneref(game:GetService('ContextActionService'))
+local guiService = cloneref(game:GetService('GuiService'))
+local coreGui = cloneref(game:GetService('CoreGui'))
+local starterGui = cloneref(game:GetService('StarterGui'))
 
+local isnetworkowner = identifyexecutor and table.find({'AWP', 'Nihon'}, ({identifyexecutor()})[1]) and isnetworkowner or function()
+	return true
+end
+local gameCamera = workspace.CurrentCamera
 local lplr = playersService.LocalPlayer
+local assetfunction = getcustomasset
+
 local vape = shared.vape
-local mouseDown = false
+local entitylib = vape.Libraries.entity
+local targetinfo = vape.Libraries.targetinfo
 
-local function pressMouse()
-	if mouseDown then
-		return
-	end
-	if not mouse1press then
-		return
-	end
-	pcall(function()
-		mouse1press()
-	end)
-	mouseDown = true
-end
-local function releaseMouse()
-	if not mouseDown then
-		return
-	end
-	if not mouse1release then
-		return
-	end
-	pcall(function()
-		mouse1release()
-	end)
-	mouseDown = false
-end
-
-run(function()
-	local Catch
-	local Range
+run(function ()
+    local Catch
+    local Range
+    local fish
 
 	local function getFish()
-		local target = nil
-		local character = lplr.Character
-		local root = character and character.HumanoidRootPart
-		if not root then
-			return nil
-		end
-
-		local suc, fishes = pcall(function()
-			return workspace.Game.Fish.client:GetChildren()
-		end)
-		if not suc then
-			return nil
-		end
-
-		for _, fish in next, fishes do
-			local fishRoot = fish.RootPart
-			if fishRoot then
-				local mag = (fishRoot.Position - root.Position).Magnitude
-				if mag < Range.Value then
-					target = fish
-				end
+		local Target = nil
+		
+		for i, v in next, workspace.Game.Fish.client:GetChildren() do
+			local Magnitude = (v.RootPart.Position - lplr.Character.HumanoidRootPart.Position).Magnitude
+			if Magnitude < Range.Value then
+				Target = v
 			end
 		end
-		return target
+		return Target
 	end
-
+	
 	Catch = vape.Categories.Combat:CreateModule({
 		Name = 'Auto Catch',
 		Function = function(callback)
-			if not callback then
-				return
+			if callback then
+				repeat
+					fish = getFish(Range)
+                    if fish then
+                        replicatedStorage.common.packages.Knit.Services.HarpoonService.RF.StartCatching:InvokeServer(
+                        fish.Name)
+                    end
+					task.wait()
+				until not Catch.Enabled
 			end
-
-			local remote
-			local suc = pcall(function()
-				remote = replicatedStorage.common.packages.Knit.Services.HarpoonService.RF.StartCatching
-			end)
-			if not suc or not remote then
-				vape:CreateNotification(
-					'Auto Catch',
-					'StartCatching remote not found.',
-					7,
-					'alert'
-				)
-				task.defer(function()
-					if Catch.Enabled then
-						Catch:Toggle()
-					end
-				end)
-				return
-			end
-
-			repeat
-				local fish = getFish()
-				if fish then
-					remote:InvokeServer(fish.Name)
-				end
-				task.wait(0.05)
-			until not Catch.Enabled
-		end,
-		Tooltip = 'Automatically catches nearby fish.'
+		end
 	})
 
 	Range = Catch:CreateSlider({
 		Name = 'Range',
-		Min = 1,
+		Min = 0,
 		Max = 30,
 		Default = 20,
 		Suffix = 'm'
 	})
 end)
 
-run(function()
-	local Minigame
-	local Gradient
+run(function ()
+    local Minigame
+	local Color
 	local Legit
+	local catchui = lplr.PlayerGui.Main.CatchingBar.Frame.Bar.Catch
+	local greenp, fishp, info
 
 	Minigame = vape.Categories.Combat:CreateModule({
 		Name = 'Auto Minigame',
 		Function = function(callback)
-			if not callback then
-				releaseMouse()
-				return
-			end
-
-			repeat
-				local catchui
-				local suc = pcall(function()
-					catchui = lplr.PlayerGui.Main.CatchingBar.Frame.Bar.Catch
-				end)
-
-				if suc and catchui and catchui.Parent then
-					local green = catchui.Green
-					local fish = catchui.Marker.Fish
-					if green and fish then
+			if callback then
+				repeat
+                    if catchui.Parent then
 						if not Legit.Enabled then
-							green.Size = UDim2.new(1, 0, 1, 0)
-							if Gradient.Enabled and catchui.Gradient then
+							catchui.Green.Size = UDim2.new(1, 0, 1, 0)
+							if Gradient.Enabled then
 								catchui.Gradient.BackgroundColor3 = Color3.fromRGB(136, 194, 89)
 							end
 						end
+						local greenp = catchui.Green.AbsolutePosition + catchui.Green.AbsoluteSize / 2
+						local fishp = catchui.Marker.Fish.AbsolutePosition + catchui.Marker.Fish.AbsoluteSize / 2
 
-						local greenp = green.AbsolutePosition + green.AbsoluteSize / 2
-						local fishp = fish.AbsolutePosition + fish.AbsoluteSize / 2
 						if (greenp - fishp).Magnitude > 3 then
-							pressMouse()
+							mouse1press()
+							info = true
 						else
-							releaseMouse()
+							if info then
+								mouse1release()
+								info = false
+							end
 						end
-					else
-						releaseMouse()
-					end
-				else
-					releaseMouse()
-				end
-				task.wait()
-			until not Minigame.Enabled
-
-			releaseMouse()
-		end,
-		Tooltip = 'Automatically solves the fishing minigame.'
-	})
-
+                    end
+					task.wait()
+				until not Minigame.Enabled
+			end
+		end
+    })
 	Gradient = Minigame:CreateToggle({
-		Name = 'Gradient'
+		Name = 'Gradient',
 	})
 	Legit = Minigame:CreateToggle({
-		Name = 'Legit'
+		Name = 'Legit',
 	})
 end)
