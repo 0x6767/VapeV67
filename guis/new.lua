@@ -5968,6 +5968,7 @@ modules:CreateToggle({
 
 local guipane = mainapi.Categories.Main:CreateSettingsPane({Name = 'GUI'})
 local asort
+local asortenabled = false
 local guipriority = {
 	GUICategory = 1,
 	CombatCategory = 2,
@@ -6064,13 +6065,14 @@ scaleslider = guipane:CreateSlider({
 asort = guipane:CreateToggle({
 	Name = 'Auto Sort',
 	Default = true,
-	Function = function(callback)
-		if callback then
+	Function = function(enabled)
+		asortenabled = enabled
+		if enabled then
 			task.spawn(function()
-				repeat
+				while asortenabled do
 					sortgui()
 					task.wait()
-				until not asort.Enabled
+				end
 			end)
 		end
 	end
