@@ -5966,6 +5966,37 @@ modules:CreateToggle({
 	GUI Settings
 ]]
 
+local priority = {
+	GUICategory = 1,
+	CombatCategory = 2,
+	BlatantCategory = 3,
+	RenderCategory = 4,
+	UtilityCategory = 5,
+	WorldCategory = 6,
+	InventoryCategory = 7,
+	MinigamesCategory = 8,
+	FriendsCategory = 9,
+	ProfilesCategory = 10
+}
+local function sortgui()
+	local categories = {}
+	for _, v in mainapi.Categories do
+		if v.Type ~= 'Overlay' then
+			table.insert(categories, v)
+		end
+	end
+	table.sort(categories, function(a, b)
+		return (priority[a.Object.Name] or 99) < (priority[b.Object.Name] or 99)
+	end)
+
+	local ind = 0
+	for _, v in categories do
+		if v.Object.Visible then
+			v.Object.Position = UDim2.fromOffset(6 + (ind % 8 * 230), 60 + (ind > 7 and 360 or 0))
+			ind += 1
+		end
+	end
+end
 local guipane = mainapi.Categories.Main:CreateSettingsPane({Name = 'GUI'})
 mainapi.Blur = guipane:CreateToggle({
 	Name = 'Blur background',
@@ -5999,6 +6030,19 @@ guipane:CreateToggle({
 	end,
 	Default = true,
 	Tooltip = 'Shows the button to change to Legit Mode'
+})
+mainapi.AutoSort = guipane:CreateToggle({
+	Name = 'Blur background',
+	Function = function(callback)
+		if callback then
+			repeat
+				sortgui()
+				task.wait()
+			until not mainapi.AutoSort
+		end
+	end,
+	Default = true,
+	Tooltip = 'Blur the background of the GUI'
 })
 local scaleslider = {Object = {}, Value = 1}
 mainapi.Scale = guipane:CreateToggle({
@@ -6079,35 +6123,7 @@ guipane:CreateButton({
 guipane:CreateButton({
 	Name = 'Sort GUI',
 	Function = function()
-		local priority = {
-			GUICategory = 1,
-			CombatCategory = 2,
-			BlatantCategory = 3,
-			RenderCategory = 4,
-			UtilityCategory = 5,
-			WorldCategory = 6,
-			InventoryCategory = 7,
-			MinigamesCategory = 8,
-			FriendsCategory = 9,
-			ProfilesCategory = 10
-		}
-		local categories = {}
-		for _, v in mainapi.Categories do
-			if v.Type ~= 'Overlay' then
-				table.insert(categories, v)
-			end
-		end
-		table.sort(categories, function(a, b)
-			return (priority[a.Object.Name] or 99) < (priority[b.Object.Name] or 99)
-		end)
-
-		local ind = 0
-		for _, v in categories do
-			if v.Object.Visible then
-				v.Object.Position = UDim2.fromOffset(6 + (ind % 8 * 230), 60 + (ind > 7 and 360 or 0))
-				ind += 1
-			end
-		end
+		sortgui()
 	end,
 	Tooltip = 'Sorts GUI'
 })
